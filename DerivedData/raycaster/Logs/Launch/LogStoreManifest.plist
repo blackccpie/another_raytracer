@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>logFormatVersion</key>
+	<integer>10</integer>
+	<key>logs</key>
+	<dict>
+		<key>57D980B6-15B3-4835-AB72-E350D67BD8E2</key>
+		<dict>
+			<key>auxiliaryLogUniqueIdentifier</key>
+			<string>8CE4F861-E86E-4D13-8145-76557142C6A6</string>
+			<key>auxiliaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+			</dict>
+			<key>className</key>
+			<string>IDESchemeActionsInvocationRecord</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>com.apple.dt.IDE.LaunchSchemeAction</string>
+			<key>fileName</key>
+			<string>Run-raycaster-2022.11.08_22-44-31-+0100.xcresult</string>
+			<key>hasAuxiliaryLog</key>
+			<true/>
+			<key>hasConsoleLog</key>
+			<true/>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>raycaster project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>raycaster</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Run raycaster</string>
+			<key>timeStartedRecording</key>
+			<real>689636671.97917604</real>
+			<key>timeStoppedRecording</key>
+			<real>0.0</real>
+			<key>title</key>
+			<string>Run raycaster</string>
+			<key>uniqueIdentifier</key>
+			<string>57D980B6-15B3-4835-AB72-E350D67BD8E2</string>
+		</dict>
+		<key>7457A56E-648F-4E45-9CEB-EBE3586C491B</key>
+		<dict>
+			<key>auxiliaryLogUniqueIdentifier</key>
+			<string>8FFDBDDF-9587-4570-94E3-D09A826EFA81</string>
+			<key>auxiliaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>E</string>
+			</dict>
+			<key>className</key>
+			<string>IDESchemeActionsInvocationRecord</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>com.apple.dt.IDE.LaunchSchemeAction</string>
+			<key>fileName</key>
+			<string>Run-raycaster-2022.11.08_22-35-40-+0100.xcresult</string>
+			<key>hasAuxiliaryLog</key>
+			<true/>
+			<key>hasConsoleLog</key>
+			<true/>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>E</string>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>raycaster project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>raycaster</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Run raycaster</string>
+			<key>timeStartedRecording</key>
+			<real>689636140.34923005</real>
+			<key>timeStoppedRecording</key>
+			<real>0.0</real>
+			<key>title</key>
+			<string>Run raycaster</string>
+			<key>uniqueIdentifier</key>
+			<string>7457A56E-648F-4E45-9CEB-EBE3586C491B</string>
+		</dict>
+		<key>BA0CA453-E8E9-4013-97B7-259A693F717D</key>
+		<dict>
+			<key>auxiliaryLogUniqueIdentifier</key>
+			<string>F7E731C8-C2CF-4B0A-B50E-54CA9881D311</string>
+			<key>auxiliaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+			</dict>
+			<key>className</key>
+			<string>IDESchemeActionsInvocationRecord</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>com.apple.dt.IDE.LaunchSchemeAction</string>
+			<key>fileName</key>
+			<string>Run-raycaster-2022.11.01_19-01-40-+0100.xcresult</string>
+			<key>hasAuxiliaryLog</key>
+			<true/>
+			<key>hasConsoleLog</key>
+			<true/>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>raycaster project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>raycaster</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Run raycaster</string>
+			<key>timeStartedRecording</key>
+			<real>689018500.28948295</real>
+			<key>timeStoppedRecording</key>
+			<real>0.0</real>
+			<key>title</key>
+			<string>Run raycaster</string>
+			<key>uniqueIdentifier</key>
+			<string>BA0CA453-E8E9-4013-97B7-259A693F717D</string>
+		</dict>
+	</dict>
+</dict>
+</plist>
