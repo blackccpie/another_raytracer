@@ -35,19 +35,19 @@ int main()
 {
     // Image
     constexpr auto aspect_ratio = 16.0 / 9.0;
-    constexpr int image_width = 640;
+    constexpr int image_width = 1080;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int color_channels = 3;
-    constexpr int samples_per_pixel = 20;
-    constexpr int max_depth = 50;
+    constexpr int samples_per_pixel = 50;
+    constexpr int max_depth = 100;
 
     // World
     hittable_list world;
     
     auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
-    auto material_center = make_shared<lambertian>(color(0.7, 0.3, 0.3));
-    auto material_left   = make_shared<metal>(color(0.8, 0.8, 0.8), 0.3);
-    auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 1.0);
+    auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
+    auto material_left   = make_shared<dielectric>(1.5);
+    auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
     
     world.add(make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
     world.add(make_shared<sphere>(point3( 0.0,    0.0, -1.0),   0.5, material_center));
@@ -55,7 +55,7 @@ int main()
     world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
     
     // Camera
-    camera cam;
+    camera cam(point3(-2,2,1), point3(0,0,-1), vec3(0,1,0), 90, aspect_ratio);
 
     // Render
     std::cout << image_width << " " << image_height << std::endl;
@@ -64,7 +64,11 @@ int main()
 
     auto start = std::chrono::steady_clock::now();
     
+    size_t progress = 0;
+    
     for (int j = 0; j < image_height; ++j) {
+        progress = j*100/image_height;
+        std::cout << "Computing done @" << progress << "%\r" << std::flush;
         int offset = color_channels*j*image_width;
         for (int i = 0; i < image_width; ++i) {
             color pixel_color(0, 0, 0);
@@ -81,7 +85,7 @@ int main()
     
     auto end = std::chrono::steady_clock::now();
     
-    std::cout << "Rendering computed in milliseconds: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
+    std::cout << std::endl << "Rendering computed in milliseconds: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
     
     gui::display( output_image.data(), image_width, image_height );
 }
