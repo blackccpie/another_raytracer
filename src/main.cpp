@@ -34,8 +34,8 @@ color ray_color(const ray& r, const hittable& world, int depth) {
 hittable_list random_scene() {
     hittable_list objects;
 
-    auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
-    objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
+    auto ground_checked_material = make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+    objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(ground_checked_material)));
 
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {
@@ -80,6 +80,30 @@ hittable_list random_scene() {
     return world;
 }
 
+hittable_list two_spheres() {
+    hittable_list objects;
+
+    auto checker = make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+
+    objects.add(make_shared<sphere>(point3(0,-10, 0), 10, make_shared<lambertian>(checker)));
+    objects.add(make_shared<sphere>(point3(0, 10, 0), 10, make_shared<lambertian>(checker)));
+
+    return objects;
+}
+
+/*hittable_list simple_light() {
+    hittable_list objects;
+
+    auto pertext = make_shared<noise_texture>(4);
+    objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
+    objects.add(make_shared<sphere>(point3(0,2,0), 2, make_shared<lambertian>(pertext)));
+
+    auto difflight = make_shared<diffuse_light>(color(4,4,4));
+    objects.add(make_shared<xy_rect>(3, 5, 1, 3, -2, difflight));
+
+    return objects;
+}*/
+
 int main()
 {
     // Image
@@ -89,18 +113,49 @@ int main()
     constexpr int color_channels = 3;
     constexpr int samples_per_pixel = 50;
     constexpr int max_depth = 100;
-
+    constexpr int scene_index = 2;
+    
     // World
-    auto world = random_scene();
+    hittable_list world;
+
+    point3 lookfrom;
+    point3 lookat;
+    auto vfov = 40.0;
+    auto aperture = 0.0;
+
+    switch (scene_index) {
+        case 1:
+            world = random_scene();
+            lookfrom = point3(13,2,3);
+            lookat = point3(0,0,0);
+            vfov = 20.0;
+            aperture = 0.1;
+            break;
+
+        default:
+        case 2:
+            world = two_spheres();
+            lookfrom = point3(13,2,3);
+            lookat = point3(0,0,0);
+            vfov = 20.0;
+            break;
+            
+        /*default:
+        case 3:
+            world = simple_light();
+            samples_per_pixel = 400;
+            background = color(0,0,0);
+            lookfrom = point3(26,3,6);
+            lookat = point3(0,2,0);
+            vfov = 20.0;
+            break;*/
+    }
     
     // Camera
-    point3 lookfrom(13,2,3);
-    point3 lookat(0,0,0);
     vec3 vup(0,1,0);
     auto dist_to_focus = 10.0;
-    auto aperture = 0.1;
-    
-    camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
+
+    camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus);
 
     // Render
     std::cout << image_width << " " << image_height << std::endl;
