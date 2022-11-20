@@ -10,7 +10,6 @@ class texture {
 
 class solid_color : public texture {
     public:
-        solid_color() {}
         solid_color(color c) : color_value(c) {}
 
         solid_color(double red, double green, double blue)
@@ -26,8 +25,6 @@ class solid_color : public texture {
 
 class checker_texture : public texture {
     public:
-        checker_texture() {}
-
         checker_texture(shared_ptr<texture> _even, shared_ptr<texture> _odd)
             : even(_even), odd(_odd) {}
 

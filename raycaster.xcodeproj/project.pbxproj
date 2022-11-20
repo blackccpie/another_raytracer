@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		ADC24C0029298CF700A97304 /* gui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ADC24BFF29298CF700A97304 /* gui.cpp */; };
 		ADF5A050290DCDB7005BC8E9 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ADF5A04F290DCDB7005BC8E9 /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -33,6 +34,11 @@
 		ADC24BF82926D22300A97304 /* bvh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bvh.h; sourceTree = "<group>"; };
 		ADC24BF92927FAB200A97304 /* aarect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aarect.h; sourceTree = "<group>"; };
 		ADC24BFA2927FCC900A97304 /* texture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = texture.h; sourceTree = "<group>"; };
+		ADC24BFB29294FF400A97304 /* mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = "<group>"; };
+		ADC24BFD292987B200A97304 /* rapidobj.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = rapidobj.hpp; sourceTree = "<group>"; };
+		ADC24BFE292987B200A97304 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		ADC24BFF29298CF700A97304 /* gui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui.cpp; sourceTree = "<group>"; };
+		ADC24C01292992A800A97304 /* triangle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = triangle.h; sourceTree = "<group>"; };
 		ADC78928291B053900140049 /* CImg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CImg.h; sourceTree = "<group>"; };
 		ADC8C7CA290EC29C00A3EE5A /* hittable_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hittable_list.h; sourceTree = "<group>"; };
 		ADF5A04C290DCDB7005BC8E9 /* raycaster */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = raycaster; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -53,9 +59,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		ADC24BFC2929874100A97304 /* rapidobj */ = {
+			isa = PBXGroup;
+			children = (
+				ADC24BFE292987B200A97304 /* LICENSE */,
+				ADC24BFD292987B200A97304 /* rapidobj.hpp */,
+			);
+			path = rapidobj;
+			sourceTree = "<group>";
+		};
 		ADC78925291B046300140049 /* 3rd_parties */ = {
 			isa = PBXGroup;
 			children = (
+				ADC24BFC2929874100A97304 /* rapidobj */,
 				ADC78926291B04E800140049 /* CImg */,
 			);
 			path = 3rd_parties;
@@ -89,12 +105,15 @@
 		ADF5A04E290DCDB7005BC8E9 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				ADC24C01292992A800A97304 /* triangle.h */,
 				ADC24BFA2927FCC900A97304 /* texture.h */,
+				ADC24BFB29294FF400A97304 /* mesh.h */,
 				ADC24BF92927FAB200A97304 /* aarect.h */,
 				ADC24BF82926D22300A97304 /* bvh.h */,
 				ADC24BF72926CEAA00A97304 /* aabb.h */,
 				AD8DD45B291038890053F1E8 /* material.h */,
 				AD2C2C9D290FBB3100AA6CE3 /* gui.h */,
+				ADC24BFF29298CF700A97304 /* gui.cpp */,
 				AD2BC6F6290F211000B0B741 /* camera.h */,
 				AD2BC6F5290F04C400B0B741 /* rtweekend.h */,
 				AD2BC6F4290EFD6800B0B741 /* sphere.h */,
@@ -166,6 +185,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				ADF5A050290DCDB7005BC8E9 /* main.cpp in Sources */,
+				ADC24C0029298CF700A97304 /* gui.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -284,9 +304,11 @@
 		ADF5A054290DCDB7005BC8E9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CODE_SIGN_STYLE = Automatic;
 				HEADER_SEARCH_PATHS = /opt/X11/include;
 				LIBRARY_SEARCH_PATHS = /opt/X11/lib;
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = "-lX11";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -295,9 +317,11 @@
 		ADF5A055290DCDB7005BC8E9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CODE_SIGN_STYLE = Automatic;
 				HEADER_SEARCH_PATHS = /opt/X11/include;
 				LIBRARY_SEARCH_PATHS = /opt/X11/lib;
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = "-lX11";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

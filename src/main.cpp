@@ -6,6 +6,7 @@
 #include "gui.h"
 #include "hittable_list.h"
 #include "material.h"
+#include "mesh.h"
 #include "sphere.h"
 
 #include <array>
@@ -104,16 +105,25 @@ hittable_list two_spheres() {
     return objects;
 }*/
 
-int main()
+hittable_list mesh_scene() {
+    mesh m;
+    if( m.parse("dino.obj") ) {
+        return m.build();
+    }
+    else
+        throw std::logic_error("cannot parse input obj file!");
+}
+
+int main() try
 {
     // Image
     constexpr auto aspect_ratio = 3.0 / 2.0;
     constexpr int image_width = 640;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int color_channels = 3;
-    constexpr int samples_per_pixel = 50;
-    constexpr int max_depth = 100;
-    constexpr int scene_index = 2;
+    constexpr int samples_per_pixel = 30;//50;
+    constexpr int max_depth = 30;//100;
+    constexpr int scene_index = 3;
     
     // World
     hittable_list world;
@@ -132,7 +142,6 @@ int main()
             aperture = 0.1;
             break;
 
-        default:
         case 2:
             world = two_spheres();
             lookfrom = point3(13,2,3);
@@ -140,8 +149,15 @@ int main()
             vfov = 20.0;
             break;
             
-        /*default:
         case 3:
+            world = mesh_scene();
+            lookfrom = point3(0,25,20);
+            lookat = point3(0,0,0);
+            vfov = 80.0;
+            aperture = 0.1;
+            break;
+            
+        /*case 3:
             world = simple_light();
             samples_per_pixel = 400;
             background = color(0,0,0);
@@ -149,6 +165,10 @@ int main()
             lookat = point3(0,2,0);
             vfov = 20.0;
             break;*/
+            
+        default:
+            std::cout << "no scene will be loaded! exiting..." << std::endl;
+            return EXIT_FAILURE;
     }
     
     // Camera
@@ -188,4 +208,10 @@ int main()
     std::cout << std::endl << "Rendering computed in milliseconds: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
     
     gui::display( output_image.data(), image_width, image_height );
+    
+    return EXIT_SUCCESS;
+}
+catch(const std::exception& e)
+{
+    std::cerr << e.what() << std::endl;
 }

@@ -2,7 +2,6 @@
 #define HITTABLE_H
 
 #include "aabb.h"
-#include "ray.h"
 #include "rtweekend.h"
 
 class material;
