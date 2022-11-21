@@ -39,9 +39,6 @@ class mesh {
         hittable_list build() {
             hittable_list triangles;
             
-            // TODO-AM : temporary hardcoded
-            auto lambertian_mat = make_shared<lambertian>(color(0.4, 0.2, 0.1));
-            
             auto get_vertice_by_index = [this](size_t index) {
                 const rapidobj::Array<float>& positions = parse_data.attributes.positions;
                 return vec3{positions[3*index+0],
@@ -57,7 +54,7 @@ class mesh {
                         get_vertice_by_index(indices[3*i + 0].position_index), // first vertice
                         get_vertice_by_index(indices[3*i + 1].position_index), // second vertice
                         get_vertice_by_index(indices[3*i + 2].position_index), // third vertice
-                        lambertian_mat));
+                        make_shared<lambertian>(color::random())));
                 }
             }
             

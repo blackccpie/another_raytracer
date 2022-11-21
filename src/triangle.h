@@ -21,15 +21,6 @@ class triangle : public hittable {
 
 bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
     
-    /*
-    // Find the nearest root that lies in the acceptable range.
-    auto root = (-half_b - sqrtd) / a;
-    if (root < t_min || t_max < root) {
-        root = (-half_b + sqrtd) / a;
-        if (root < t_min || t_max < root)
-            return false;
-    }*/
-    
     // INSPIRED BY:
     // www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/ray-triangle-intersection-geometric-solution
     
@@ -52,9 +43,13 @@ bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
     // compute t (equation 3)
     double t = -(dot(outward_normal,r.origin()) + d) / normal_dot_ray_direction;
  
-    // check if the triangle is in behind the ray
-    if (t < 0) return false; //the triangle is behind
+    // check if the triangle is in behind the ray (disabled because redundant with the upcomoing range test)
+    //if (t < 0) return false; //the triangle is behind
  
+    // Check t lies in the acceptable range.
+    if (t < t_min || t_max < t)
+        return false;
+    
     // compute the intersection point using equation 1
     vec3 p = r.origin() + t * r.direction();
  
@@ -66,19 +61,19 @@ bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
     vec3 edge1 = pt2 - pt1;
     vec3 vpt1 = p - pt1;
     c = cross(edge1,vpt1);
-    if (dot(outward_normal,c) < 0) return false; //P is on the right side
+    if (dot(outward_normal,c) < 0) return false; // p is on the right (out) side
  
     // edge 2
     vec3 edge2 = pt3 - pt2;
     vec3 vpt2 = p - pt2;
     c = cross(edge2,vpt2);
-    if (dot(outward_normal,c) < 0)  return false; //P is on the right side
+    if (dot(outward_normal,c) < 0)  return false; // p is on the right (out) side
  
     // edge 3
     vec3 edge3 = pt1 - pt3;
     vec3 vpt3 = p - pt3;
     c = cross(edge3,vpt3);
-    if (dot(outward_normal,c) < 0) return false; //P is on the right side;
+    if (dot(outward_normal,c) < 0) return false; // p is on the right (out) side
  
     rec.t = t;
     rec.p = p;
