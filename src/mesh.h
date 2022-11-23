@@ -25,9 +25,11 @@ class mesh {
                 return false;
             }
             
-            auto num_triangles = size_t();
+            size_t num_triangles = 0;
 
             for (const auto& shape : parse_data.shapes) {
+                //if(shape.mesh.num_face_vertices.size() != 3)
+                //    throw std::logic_error("only tri-mesh are supported for now! "+std::to_string(shape.mesh.num_face_vertices.size()));
                 num_triangles += shape.mesh.num_face_vertices.size();
             }
 
@@ -49,12 +51,15 @@ class mesh {
             for (const auto& shape : parse_data.shapes) {
                 const rapidobj::Array<rapidobj::Index>& indices = shape.mesh.indices;
                 
+                //std::cout << "shape: " << indices.size() << std::endl;
+                
                 for(size_t i=0; i<indices.size()/3; ++i) {
                     triangles.add(make_shared<triangle>(
                         get_vertice_by_index(indices[3*i + 0].position_index), // first vertice
                         get_vertice_by_index(indices[3*i + 1].position_index), // second vertice
                         get_vertice_by_index(indices[3*i + 2].position_index), // third vertice
-                        make_shared<lambertian>(color::random())));
+                        make_shared<lambertian>(color(0.7, 0.6, 0.5))));
+                        //make_shared<lambertian>(color::random())));
                 }
             }
             

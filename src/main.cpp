@@ -8,10 +8,13 @@
 #include "material.h"
 #include "mesh.h"
 #include "sphere.h"
+#include "threadpool.h"
 
 #include <array>
 #include <chrono>
 #include <iostream>
+
+#define PARALLEL_RUN
 
 color ray_color(const ray& r, const hittable& world, int depth) {
     hit_record rec;
@@ -107,7 +110,7 @@ hittable_list two_spheres() {
 
 hittable_list mesh_scene() {
     mesh m;
-    if( m.parse("dino.obj") ) {
+    if( m.parse("esquisse3.obj") ) {
         return m.build();
     }
     else
@@ -121,8 +124,8 @@ int main() try
     constexpr int image_width = 640;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int color_channels = 3;
-    constexpr int samples_per_pixel = 30;//50;
-    constexpr int max_depth = 30;//100;
+    constexpr int samples_per_pixel = 2;//50;
+    constexpr int max_depth = 2;//100;
     constexpr int scene_index = 3;
     
     // World
@@ -151,7 +154,8 @@ int main() try
             
         case 3:
             world = mesh_scene();
-            lookfrom = point3(0,25,20);
+            lookfrom = point3(1000,1000,1000);
+            //lookfrom = point3(0,1,2);
             lookat = point3(0,0,0);
             vfov = 80.0;
             aperture = 0.1;
@@ -182,9 +186,46 @@ int main() try
 
     std::array<std::uint8_t,image_width*image_height*color_channels> output_image{0};
 
-    auto start = std::chrono::steady_clock::now();
+    std::atomic<size_t> progress = 0;
     
-    size_t progress = 0;
+#ifdef PARALLEL_RUN
+    thread_pool tp{4};
+    
+    auto run_stripe = [&](int j0, int j1) {
+        for (int j = j0; j < j1; ++j) {
+            int offset = color_channels*j*image_width;
+            for (int i = 0; i < image_width; ++i) {
+                color pixel_color(0, 0, 0);
+                for (int s = 0; s < samples_per_pixel; ++s) {
+                    auto u = (i + random_double()) / (image_width-1);
+                    auto v = ((image_height-1-j) + random_double()) / (image_height-1); // spatial convention, not image convention!
+                    ray r = cam.get_ray(u, v);
+                    pixel_color += ray_color(r, world, max_depth);
+                }
+                write_color(output_image.data()+offset, pixel_color, samples_per_pixel);
+                offset += color_channels;
+            }
+            progress++;
+        }
+    };
+    
+    using namespace std::chrono_literals;
+    const auto start = std::chrono::steady_clock::now();
+    
+    tp.add_job( [&](){ run_stripe(0,image_height/4); } );
+    tp.add_job( [&](){ run_stripe(image_height/4,image_height/2); } );
+    tp.add_job( [&](){ run_stripe(image_height/2,3*image_height/4); } );
+    tp.add_job( [&](){ run_stripe(3*image_height/4,image_height); } );
+    while(true) {
+        const auto percent = 100*progress/image_height;
+        std::cout << "Computing done @" << 100*progress/image_height << "%\r" << std::flush;
+        std::this_thread::sleep_for(100ms);
+        if(percent >= 100)
+            break;
+    }
+    tp.wait_all();
+#else
+    const auto start = std::chrono::steady_clock::now();
     
     for (int j = 0; j < image_height; ++j) {
         progress = j*100/image_height;
@@ -202,10 +243,17 @@ int main() try
             offset += color_channels;
         }
     }
+#endif
     
-    auto end = std::chrono::steady_clock::now();
+    const auto end = std::chrono::steady_clock::now();
+    const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     
-    std::cout << std::endl << "Rendering computed in milliseconds: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
+    std::cout << std::endl << "Rendering computed in milliseconds: " << elapsed_ms << " ms" << std::endl;
+    
+    const auto total_rays = image_width * image_height * samples_per_pixel;
+    const auto ray_processing_rate = static_cast<float>(total_rays) / elapsed_ms;
+    
+    std::cout << std::endl << "Processing rate: " << ray_processing_rate << "kRay/s" << std::endl;
     
     gui::display( output_image.data(), image_width, image_height );
     
