@@ -1,5 +1,6 @@
 #include "rtweekend.h"
 
+#include "aarect.h"
 #include "bvh.h"
 #include "camera.h"
 #include "color.h"
@@ -16,23 +17,25 @@
 
 #define PARALLEL_RUN
 
-color ray_color(const ray& r, const hittable& world, int depth) {
+color ray_color(const ray& r, const color& background, const hittable& world, int depth) {
     hit_record rec;
     
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return color(0,0,0);
     
-    if (world.hit(r, 0.001, infinity, rec)) {
-        ray scattered;
-        color attenuation;
-        if (rec.mat_ptr->scatter(r, rec, attenuation, scattered))
-            return attenuation * ray_color(scattered, world, depth-1);
-        return color(0,0,0);
-    }
-    vec3 unit_direction = unit_vector(r.direction());
-    auto t = 0.5*(unit_direction.y() + 1.0);
-    return (1.0-t)*color(1.0, 1.0, 1.0) + t*color(0.5, 0.7, 1.0);
+    // If the ray hits nothing, return the background color.
+    if (!world.hit(r, 0.001, infinity, rec))
+        return background;
+
+    ray scattered;
+    color attenuation;
+    color emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+
+    if (!rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+        return emitted;
+
+    return emitted + attenuation * ray_color(scattered, background, world, depth-1);
 }
 
 hittable_list random_scene() {
@@ -95,18 +98,36 @@ hittable_list two_spheres() {
     return objects;
 }
 
-/*hittable_list simple_light() {
+hittable_list simple_light() {
     hittable_list objects;
 
-    auto pertext = make_shared<noise_texture>(4);
-    objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
-    objects.add(make_shared<sphere>(point3(0,2,0), 2, make_shared<lambertian>(pertext)));
+    //auto pertext = make_shared<noise_texture>(4);
+    objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(color(0.4, 0.2, 0.1)/*pertext*/)));
+    objects.add(make_shared<sphere>(point3(0,2,0), 2, make_shared<lambertian>(color(0.4, 0.2, 0.1)/*pertext*/)));
 
     auto difflight = make_shared<diffuse_light>(color(4,4,4));
     objects.add(make_shared<xy_rect>(3, 5, 1, 3, -2, difflight));
 
     return objects;
-}*/
+}
+
+hittable_list cornell_box() {
+    hittable_list objects;
+
+    auto red   = make_shared<lambertian>(color(.65, .05, .05));
+    auto white = make_shared<lambertian>(color(.73, .73, .73));
+    auto green = make_shared<lambertian>(color(.12, .45, .15));
+    auto light = make_shared<diffuse_light>(color(15, 15, 15));
+
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
+    objects.add(make_shared<xz_rect>(213, 343, 227, 332, 554, light));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
+    objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
+
+    return objects;
+}
 
 hittable_list mesh_scene() {
     mesh m;
@@ -124,9 +145,9 @@ int main() try
     constexpr int image_width = 640;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int color_channels = 3;
-    constexpr int samples_per_pixel = 2;//50;
-    constexpr int max_depth = 2;//100;
-    constexpr int scene_index = 3;
+    constexpr int samples_per_pixel = 200;//50;
+    constexpr int max_depth = 100;//100;
+    constexpr int scene_index = 4;
     
     // World
     hittable_list world;
@@ -135,10 +156,12 @@ int main() try
     point3 lookat;
     auto vfov = 40.0;
     auto aperture = 0.0;
+    color background(0,0,0);
 
     switch (scene_index) {
         case 1:
             world = random_scene();
+            background = color(0.70, 0.80, 1.00);
             lookfrom = point3(13,2,3);
             lookat = point3(0,0,0);
             vfov = 20.0;
@@ -147,28 +170,37 @@ int main() try
 
         case 2:
             world = two_spheres();
+            background = color(0.70, 0.80, 1.00);
             lookfrom = point3(13,2,3);
             lookat = point3(0,0,0);
             vfov = 20.0;
             break;
             
         case 3:
+            world = simple_light();
+            background = color(0,0,0);
+            lookfrom = point3(26,3,6);
+            lookat = point3(0,2,0);
+            vfov = 20.0;
+            break;
+        
+        case 4:
+            world = cornell_box();
+            background = color(0,0,0);
+            lookfrom = point3(278, 278, -800);
+            lookat = point3(278, 278, 0);
+            vfov = 40.0;
+            break;
+            
+        case 5:
             world = mesh_scene();
+            background = color(0.70, 0.80, 1.00);
             lookfrom = point3(1000,1000,1000);
             //lookfrom = point3(0,1,2);
             lookat = point3(0,0,0);
             vfov = 80.0;
             aperture = 0.1;
             break;
-            
-        /*case 3:
-            world = simple_light();
-            samples_per_pixel = 400;
-            background = color(0,0,0);
-            lookfrom = point3(26,3,6);
-            lookat = point3(0,2,0);
-            vfov = 20.0;
-            break;*/
             
         default:
             std::cout << "no scene will be loaded! exiting..." << std::endl;
@@ -200,7 +232,7 @@ int main() try
                     auto u = (i + random_double()) / (image_width-1);
                     auto v = ((image_height-1-j) + random_double()) / (image_height-1); // spatial convention, not image convention!
                     ray r = cam.get_ray(u, v);
-                    pixel_color += ray_color(r, world, max_depth);
+                    pixel_color += ray_color(r, background, world, max_depth);
                 }
                 write_color(output_image.data()+offset, pixel_color, samples_per_pixel);
                 offset += color_channels;
@@ -237,7 +269,7 @@ int main() try
                 auto u = (i + random_double()) / (image_width-1);
                 auto v = ((image_height-1-j) + random_double()) / (image_height-1); // spatial convention, not image convention!
                 ray r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, world, max_depth);
+                pixel_color += ray_color(r, background, world, max_depth);
             }
             write_color(output_image.data()+offset, pixel_color, samples_per_pixel);
             offset += color_channels;
