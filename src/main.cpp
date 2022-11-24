@@ -1,6 +1,7 @@
 #include "rtweekend.h"
 
 #include "aarect.h"
+#include "box.h"
 #include "bvh.h"
 #include "camera.h"
 #include "color.h"
@@ -125,6 +126,8 @@ hittable_list cornell_box() {
     objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
     objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
     objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
+    objects.add(make_shared<box>(point3(130, 0, 65), point3(295, 165, 230), white));
+    objects.add(make_shared<box>(point3(265, 0, 295), point3(430, 330, 460), white));
 
     return objects;
 }
@@ -145,8 +148,8 @@ int main() try
     constexpr int image_width = 640;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int color_channels = 3;
-    constexpr int samples_per_pixel = 200;//50;
-    constexpr int max_depth = 100;//100;
+    constexpr int samples_per_pixel = 50;//50;
+    constexpr int max_depth = 50;//100;
     constexpr int scene_index = 4;
     
     // World
