@@ -41,6 +41,7 @@
 		ADC24C01292992A800A97304 /* triangle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = triangle.h; sourceTree = "<group>"; };
 		ADC24C02292D72DF00A97304 /* threadpool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = threadpool.h; sourceTree = "<group>"; };
 		ADC24C03293019FD00A97304 /* box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = box.h; sourceTree = "<group>"; };
+		ADC24C052932743800A97304 /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
 		ADC78928291B053900140049 /* CImg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CImg.h; sourceTree = "<group>"; };
 		ADC8C7CA290EC29C00A3EE5A /* hittable_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hittable_list.h; sourceTree = "<group>"; };
 		ADF5A04C290DCDB7005BC8E9 /* raycaster */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = raycaster; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -70,9 +71,18 @@
 			path = rapidobj;
 			sourceTree = "<group>";
 		};
+		ADC24C042932740800A97304 /* stb */ = {
+			isa = PBXGroup;
+			children = (
+				ADC24C052932743800A97304 /* stb_image.h */,
+			);
+			path = stb;
+			sourceTree = "<group>";
+		};
 		ADC78925291B046300140049 /* 3rd_parties */ = {
 			isa = PBXGroup;
 			children = (
+				ADC24C042932740800A97304 /* stb */,
 				ADC24BFC2929874100A97304 /* rapidobj */,
 				ADC78926291B04E800140049 /* CImg */,
 			);
