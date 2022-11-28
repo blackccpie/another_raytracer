@@ -29,6 +29,7 @@
 		AD2BC6F5290F04C400B0B741 /* rtweekend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtweekend.h; sourceTree = "<group>"; };
 		AD2BC6F6290F211000B0B741 /* camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = camera.h; sourceTree = "<group>"; };
 		AD2C2C9D290FBB3100AA6CE3 /* gui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui.h; sourceTree = "<group>"; };
+		AD8A3A902935569B00B33D0F /* perlin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = perlin.h; sourceTree = "<group>"; };
 		AD8DD45B291038890053F1E8 /* material.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = material.h; sourceTree = "<group>"; };
 		ADC24BF72926CEAA00A97304 /* aabb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aabb.h; sourceTree = "<group>"; };
 		ADC24BF82926D22300A97304 /* bvh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bvh.h; sourceTree = "<group>"; };
@@ -117,6 +118,7 @@
 		ADF5A04E290DCDB7005BC8E9 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				AD8A3A902935569B00B33D0F /* perlin.h */,
 				ADC24C03293019FD00A97304 /* box.h */,
 				ADC24C02292D72DF00A97304 /* threadpool.h */,
 				ADC24C01292992A800A97304 /* triangle.h */,

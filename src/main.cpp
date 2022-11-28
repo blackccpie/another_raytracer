@@ -99,6 +99,16 @@ hittable_list two_spheres() {
     return objects;
 }
 
+hittable_list two_perlin_spheres() {
+    hittable_list objects;
+
+    auto pertext = make_shared<noise_texture>(4);
+    objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
+    objects.add(make_shared<sphere>(point3(0, 2, 0), 2, make_shared<lambertian>(pertext)));
+
+    return objects;
+}
+
 hittable_list earth() {
     auto earth_texture = make_shared<image_texture>("textures/earthmap.jpg");
     auto earth_surface = make_shared<lambertian>(earth_texture);
@@ -156,8 +166,8 @@ int main() try
     constexpr int image_width = 640;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int color_channels = 3;
-    constexpr int samples_per_pixel = 5;//50;
-    constexpr int max_depth = 5;//100;
+    constexpr int samples_per_pixel = 20;//50;
+    constexpr int max_depth = 20;//100;
     constexpr int scene_index = 3;
     
     // World
@@ -188,7 +198,7 @@ int main() try
             break;
             
         case 3:
-            world = earth();
+            world = two_perlin_spheres();
             background = color(0.70, 0.80, 1.00);
             lookfrom = point3(13,2,3);
             lookat = point3(0,0,0);
@@ -196,6 +206,14 @@ int main() try
             break;
             
         case 4:
+            world = earth();
+            background = color(0.70, 0.80, 1.00);
+            lookfrom = point3(13,2,3);
+            lookat = point3(0,0,0);
+            vfov = 20.0;
+            break;
+            
+        case 5:
             world = simple_light();
             background = color(0,0,0);
             lookfrom = point3(26,3,6);
@@ -203,7 +221,7 @@ int main() try
             vfov = 20.0;
             break;
         
-        case 5:
+        case 6:
             world = cornell_box();
             background = color(0,0,0);
             lookfrom = point3(278, 278, -800);
@@ -211,7 +229,7 @@ int main() try
             vfov = 40.0;
             break;
             
-        case 6:
+        case 7:
             world = mesh_scene();
             background = color(0.70, 0.80, 1.00);
             lookfrom = point3(1000,800,800);
