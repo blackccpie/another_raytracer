@@ -102,7 +102,7 @@ hittable_list two_spheres() {
 hittable_list two_perlin_spheres() {
     hittable_list objects;
 
-    auto pertext = make_shared<noise_texture>(4);
+    auto pertext = make_shared<noise_texture>(0.1);
     objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
     objects.add(make_shared<sphere>(point3(0, 2, 0), 2, make_shared<lambertian>(pertext)));
 
@@ -120,9 +120,9 @@ hittable_list earth() {
 hittable_list simple_light() {
     hittable_list objects;
 
-    //auto pertext = make_shared<noise_texture>(4);
-    objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(color(0.4, 0.2, 0.1)/*pertext*/)));
-    objects.add(make_shared<sphere>(point3(0,2,0), 2, make_shared<lambertian>(color(0.4, 0.2, 0.1)/*pertext*/)));
+    auto pertext = make_shared<noise_texture>(4);
+    objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
+    objects.add(make_shared<sphere>(point3(0,2,0), 2, make_shared<lambertian>(pertext)));
 
     auto difflight = make_shared<diffuse_light>(color(4,4,4));
     objects.add(make_shared<xy_rect>(3, 5, 1, 3, -2, difflight));
@@ -166,9 +166,9 @@ int main() try
     constexpr int image_width = 640;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int color_channels = 3;
-    constexpr int samples_per_pixel = 20;//50;
-    constexpr int max_depth = 20;//100;
-    constexpr int scene_index = 3;
+    constexpr int samples_per_pixel = 400;//50;
+    constexpr int max_depth = 100;//100;
+    constexpr int scene_index = 5;
     
     // World
     hittable_list world;
