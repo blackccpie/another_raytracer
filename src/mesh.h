@@ -56,12 +56,18 @@ class mesh {
                 
                 for(size_t i=0; i<indices.size()/3; ++i) {
                     rapidobj::Material m = parse_data.materials[material_ids[i]];
+                    const auto Ka = m.ambient;
                     const auto Kd = m.diffuse;
+                    const auto Ks = m.specular;
                     triangles.add(make_shared<triangle>(
                         get_vertice_by_index(indices[3*i + 0].position_index), // first vertice
                         get_vertice_by_index(indices[3*i + 1].position_index), // second vertice
                         get_vertice_by_index(indices[3*i + 2].position_index), // third vertice
-                        make_shared<lambertian>(color(Kd[0], Kd[1], Kd[2]))));
+                        make_shared<phong>(color(Ka[0], Ka[1], Ka[2]),
+                                           color(Kd[0], Kd[1], Kd[2]),
+                                           color(Ks[0], Ks[1], Ks[2]),
+                                           1)));
+                        //make_shared<lambertian>(color(Kd[0], Kd[1], Kd[2]))));
                         //make_shared<lambertian>(color::random())));
                 }
             }

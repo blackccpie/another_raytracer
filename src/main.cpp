@@ -9,6 +9,7 @@
 #include "hittable_list.h"
 #include "material.h"
 #include "mesh.h"
+#include "moving_sphere.h"
 #include "sphere.h"
 #include "threadpool.h"
 
@@ -58,6 +59,9 @@ hittable_list random_scene() {
                     auto albedo = color::random() * color::random();
                     sphere_material = make_shared<lambertian>(albedo);
                     objects.add(make_shared<sphere>(center, 0.2, sphere_material));
+                    auto center2 = center + vec3(0, random_double(0,.5), 0);
+                    objects.add(make_shared<moving_sphere>(
+                        center, center2, 0.0, 1.0, 0.2, sphere_material));
                 } else if (choose_mat < 0.95) {
                     // metal
                     auto albedo = color::random(0.5, 1);
@@ -144,15 +148,23 @@ hittable_list cornell_box() {
     objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
     objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
     objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
-    objects.add(make_shared<box>(point3(130, 0, 65), point3(295, 165, 230), white));
-    objects.add(make_shared<box>(point3(265, 0, 295), point3(430, 330, 460), white));
+    
+    shared_ptr<hittable> box1 = make_shared<box>(point3(0, 0, 0), point3(165, 330, 165), white);
+    box1 = make_shared<rotate_y>(box1, 15);
+    box1 = make_shared<translate>(box1, vec3(265,0,295));
+    objects.add(box1);
+    
+    shared_ptr<hittable> box2 = make_shared<box>(point3(0,0,0), point3(165,165,165), white);
+    box2 = make_shared<rotate_y>(box2, -18);
+    box2 = make_shared<translate>(box2, vec3(130,0,65));
+    objects.add(box2);
 
     return objects;
 }
 
 hittable_list mesh_scene() {
     mesh m;
-    if( m.parse("models/esquisse3.obj") ) {
+    if( m.parse("models/esquisse3/esquisse3.obj") ) {
         return m.build();
     }
     else
@@ -162,13 +174,13 @@ hittable_list mesh_scene() {
 int main() try
 {
     // Image
-    constexpr auto aspect_ratio = 3.0 / 2.0;
+    constexpr auto aspect_ratio = 16.0 / 9.0;
     constexpr int image_width = 640;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int color_channels = 3;
-    constexpr int samples_per_pixel = 400;//50;
+    constexpr int samples_per_pixel = 200;//50;
     constexpr int max_depth = 100;//100;
-    constexpr int scene_index = 5;
+    constexpr int scene_index = 1;
     
     // World
     hittable_list world;
@@ -232,7 +244,7 @@ int main() try
         case 7:
             world = mesh_scene();
             background = color(0.70, 0.80, 1.00);
-            lookfrom = point3(1000,800,800);
+            lookfrom = point3(0,600,600);
             //lookfrom = point3(0,1,2);
             lookat = point3(0,0,0);
             vfov = 80.0;
@@ -248,8 +260,8 @@ int main() try
     vec3 vup(0,1,0);
     auto dist_to_focus = 10.0;
 
-    camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus);
-
+    camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
+    
     // Render
     std::cout << image_width << " " << image_height << std::endl;
 

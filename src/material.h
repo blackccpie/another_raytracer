@@ -32,7 +32,7 @@ class lambertian : public material {
             if (scatter_direction.near_zero())
                 scatter_direction = rec.normal;
             
-            scattered = ray(rec.p, scatter_direction);
+            scattered = ray(rec.p, scatter_direction, r_in.time());
             attenuation = albedo->value(rec.u, rec.v, rec.p);
             return true;
         }
@@ -49,7 +49,7 @@ class metal : public material {
             const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
         ) const override {
             vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
-            scattered = ray(rec.p, reflected + fuzz*random_in_unit_sphere());
+            scattered = ray(rec.p, reflected + fuzz*random_in_unit_sphere(), r_in.time());
             attenuation = albedo;
             return (dot(scattered.direction(), rec.normal) > 0);
         }
@@ -81,7 +81,7 @@ class dielectric : public material {
             else
                 direction = refract(unit_direction, rec.normal, refraction_ratio);
 
-            scattered = ray(rec.p, direction);
+            scattered = ray(rec.p, direction, r_in.time());
             return true;
         }
 
@@ -114,6 +114,27 @@ class diffuse_light : public material  {
 
     public:
         shared_ptr<texture> emit;
+};
+
+class phong : public material {
+    public:
+    phong(const color& _Ka, const color& _Kd, const color& _Ks, int _Ns) : Ka(_Ka), Kd(_Kd), Ks(_Ks), Ns(_Ns) {}
+
+        virtual bool scatter(
+            const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
+        ) const override {
+            // https://www.ccs.neu.edu/home/fell/CS4300/Lectures/Ray-TracingFormulas.pdf
+            const auto nl = dot(unit_vector(scattered.dir),unit_vector(rec.normal));
+            const auto hf = dot(unit_vector(r_in.dir+scattered.dir),unit_vector(rec.normal));
+            attenuation = Ka + nl*Kd + std::pow(hf,Ns)*Ks;
+            return true;
+        }
+
+    public:
+        color Ka;
+        color Kd;
+        color Ks;
+    int Ns;
 };
 
 #endif
