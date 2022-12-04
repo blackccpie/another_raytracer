@@ -1,12 +1,10 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
+#include "imageio.h"
 #include "perlin.h"
 #include "rtweekend.h"
 //#include "gui.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 class texture {
     public:
@@ -67,13 +65,11 @@ class noise_texture : public texture {
 class image_texture : public texture {
     public:
         image_texture()
-          : data(nullptr), width(0), height(0), bytes_per_scanline(0) {}
+          : data(nullptr), width(0), height(0), bytes_per_pixel(0), bytes_per_scanline(0) {}
 
-        image_texture(const char* filename) {
-            auto components_per_pixel = bytes_per_pixel;
-
-            data = std::unique_ptr<unsigned char[]>( stbi_load(
-                filename, &width, &height, &components_per_pixel, components_per_pixel) );
+        image_texture(const std::string& filename) {
+            
+            data = imageio::load_image( filename, width, height, bytes_per_pixel);
 
             if (!data) {
                 std::cerr << "ERROR: Could not load texture image file '" << filename << "'.\n";
@@ -109,11 +105,9 @@ class image_texture : public texture {
         }
 
     private:
-    
-        constexpr static int bytes_per_pixel = 3;
-    
+
         std::unique_ptr<unsigned char[]> data;
-        int width, height;
+        int width, height, bytes_per_pixel;
         int bytes_per_scanline;
 };
 

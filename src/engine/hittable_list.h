@@ -14,7 +14,8 @@ class hittable_list : public hittable {
     public:
         hittable_list() = default;
         hittable_list(shared_ptr<hittable> object) { add(object); }
-
+    
+        bool empty() { return objects.empty(); }
         void clear() { objects.clear(); }
         void add(shared_ptr<hittable> object) { objects.push_back(object); }
 

@@ -6,40 +6,17 @@
 #include "camera.h"
 #include "color.h"
 #include "constant_medium.h"
+#include "engine.h"
 #include "gui.h"
 #include "hittable_list.h"
 #include "material.h"
 #include "mesh.h"
 #include "moving_sphere.h"
 #include "sphere.h"
-#include "threadpool.h"
 
 #include <array>
 #include <chrono>
 #include <iostream>
-
-#define PARALLEL_RUN
-
-color ray_color(const ray& r, const color& background, const hittable& world, int depth) {
-    hit_record rec;
-    
-    // If we've exceeded the ray bounce limit, no more light is gathered.
-    if (depth <= 0)
-        return color(0,0,0);
-    
-    // If the ray hits nothing, return the background color.
-    if (!world.hit(r, 0.001, infinity, rec))
-        return background;
-
-    ray scattered;
-    color attenuation;
-    color emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
-
-    if (!rec.mat_ptr->scatter(r, rec, attenuation, scattered))
-        return emitted;
-
-    return emitted + attenuation * ray_color(scattered, background, world, depth-1);
-}
 
 hittable_list random_scene() {
     hittable_list objects;
@@ -234,7 +211,7 @@ hittable_list final_scene() {
     boundary = make_shared<sphere>(point3(0, 0, 0), 5000, make_shared<dielectric>(1.5));
     objects.add(make_shared<constant_medium>(boundary, .0001, color(1,1,1)));
 
-    auto emat = make_shared<lambertian>(make_shared<image_texture>("earthmap.jpg"));
+    auto emat = make_shared<lambertian>(make_shared<image_texture>("textures/earthmap.jpg"));
     objects.add(make_shared<sphere>(point3(400,200,400), 100, emat));
     auto pertext = make_shared<noise_texture>(0.1);
     objects.add(make_shared<sphere>(point3(220,280,300), 80, make_shared<lambertian>(pertext)));
@@ -259,7 +236,21 @@ hittable_list final_scene() {
 hittable_list mesh_scene() {
     mesh m;
     if( m.parse("models/esquisse3/esquisse3.obj") ) {
-        return m.build();
+        hittable_list world;
+        
+        // mesh triangles
+        auto triangles = m.build();
+        world.add(make_shared<bvh_node>(triangles, 0.0, 1.0));
+        
+        // lighting
+        auto light = make_shared<diffuse_light>(color(7, 7, 7));
+        world.add(make_shared<xz_rect>(123, 423, 147, 412, 554, light));
+        //world.add(make_shared<sphere>(point3(0, 800, 500), 100, light));
+        
+        // thin mist
+        auto boundary = make_shared<sphere>(point3(0, 0, 0), 5000, make_shared<dielectric>(1.5));
+        world.add(make_shared<constant_medium>(boundary, .0001, color(1,1,1)));
+        return world;
     }
     else
         throw std::logic_error("cannot parse input obj file!");
@@ -272,9 +263,7 @@ int main() try
     constexpr int image_width = 640;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int color_channels = 3;
-    constexpr int samples_per_pixel = 1000;//50;
-    constexpr int max_depth = 10;//100;
-    constexpr int scene_index = 8;
+    constexpr int scene_index = 9;
     
     // World
     hittable_list world;
@@ -353,11 +342,10 @@ int main() try
             
         case 9:
             world = mesh_scene();
-            background = color(0.70, 0.80, 1.00);
-            lookfrom = point3(0,600,600);
-            //lookfrom = point3(0,1,2);
-            lookat = point3(0,0,0);
-            vfov = 80.0;
+            background = color(0.10, 0.10, 0.10);
+            lookfrom = point3(-200,300,1100);
+            lookat = point3(200,-150,0);
+            vfov = 75.0;
             aperture = 0.1;
             break;
             
@@ -377,76 +365,20 @@ int main() try
 
     std::array<std::uint8_t,image_width*image_height*color_channels> output_image{0};
 
-    std::atomic<size_t> progress = 0;
-    
-#ifdef PARALLEL_RUN
-    thread_pool tp{4};
-    
-    auto run_stripe = [&](int j0, int j1) {
-        for (int j = j0; j < j1; ++j) {
-            int offset = color_channels*j*image_width;
-            for (int i = 0; i < image_width; ++i) {
-                color pixel_color(0, 0, 0);
-                for (int s = 0; s < samples_per_pixel; ++s) {
-                    auto u = (i + random_double()) / (image_width-1);
-                    auto v = ((image_height-1-j) + random_double()) / (image_height-1); // spatial convention, not image convention!
-                    ray r = cam.get_ray(u, v);
-                    pixel_color += ray_color(r, background, world, max_depth);
-                }
-                write_color(output_image.data()+offset, pixel_color, samples_per_pixel);
-                offset += color_channels;
-            }
-            progress++;
-        }
-    };
-    
-    using namespace std::chrono_literals;
-    const auto start = std::chrono::steady_clock::now();
-    
-    tp.add_job( [&](){ run_stripe(0,image_height/4); } );
-    tp.add_job( [&](){ run_stripe(image_height/4,image_height/2); } );
-    tp.add_job( [&](){ run_stripe(image_height/2,3*image_height/4); } );
-    tp.add_job( [&](){ run_stripe(3*image_height/4,image_height); } );
-    while(true) {
-        const auto percent = 100*progress/image_height;
-        std::cout << "Computing done @" << 100*progress/image_height << "%\r" << std::flush;
-        std::this_thread::sleep_for(100ms);
-        if(percent >= 100)
-            break;
-    }
-    tp.wait_all();
-#else
-    const auto start = std::chrono::steady_clock::now();
-    
-    for (int j = 0; j < image_height; ++j) {
-        progress = j*100/image_height;
-        std::cout << "Computing done @" << progress << "%\r" << std::flush;
-        int offset = color_channels*j*image_width;
-        for (int i = 0; i < image_width; ++i) {
-            color pixel_color(0, 0, 0);
-            for (int s = 0; s < samples_per_pixel; ++s) {
-                auto u = (i + random_double()) / (image_width-1);
-                auto v = ((image_height-1-j) + random_double()) / (image_height-1); // spatial convention, not image convention!
-                ray r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, background, world, max_depth);
-            }
-            write_color(output_image.data()+offset, pixel_color, samples_per_pixel);
-            offset += color_channels;
-        }
-    }
-#endif
-    
-    const auto end = std::chrono::steady_clock::now();
-    const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    engine eng( cam );
+    eng.set_scene(world,background);
+    auto elapsed_ms = eng.run( output_image.data(), image_width, image_height, color_channels);
     
     std::cout << std::endl << "Rendering computed in milliseconds: " << elapsed_ms << " ms" << std::endl;
     
-    const auto total_rays = image_width * image_height * samples_per_pixel;
+    const auto total_rays = image_width * image_height * engine::samples_per_pixel;
     const auto ray_processing_rate = static_cast<float>(total_rays) / elapsed_ms;
     
     std::cout << std::endl << "Processing rate: " << ray_processing_rate << "kRay/s" << std::endl;
     
     gui::display( output_image.data(), image_width, image_height );
+    
+    imageio::save_image("output.png",image_width,image_height,color_channels,output_image.data());
     
     return EXIT_SUCCESS;
 }

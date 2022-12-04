@@ -46,6 +46,9 @@
 		AD8A3AAB293CEAFA00B33D0F /* rtweekend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtweekend.h; sourceTree = "<group>"; };
 		AD8A3AAC293CEAFA00B33D0F /* threadpool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = threadpool.h; sourceTree = "<group>"; };
 		AD8A3AAD293CEAFA00B33D0F /* gui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui.cpp; sourceTree = "<group>"; };
+		AD8A3AAF293D301000B33D0F /* imageio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imageio.h; sourceTree = "<group>"; };
+		AD8A3AB0293D311200B33D0F /* engine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = engine.h; sourceTree = "<group>"; };
+		AD8A3AB1293D406000B33D0F /* stb_image_write.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image_write.h; sourceTree = "<group>"; };
 		ADC24BFD292987B200A97304 /* rapidobj.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = rapidobj.hpp; sourceTree = "<group>"; };
 		ADC24BFE292987B200A97304 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		ADC24C052932743800A97304 /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
@@ -93,6 +96,7 @@
 		AD8A3A9D293CE7E800B33D0F /* engine */ = {
 			isa = PBXGroup;
 			children = (
+				AD8A3AB0293D311200B33D0F /* engine.h */,
 				AD8A3A9F293CEA4100B33D0F /* camera.h */,
 				AD8A3AA1293CEA4100B33D0F /* constant_medium.h */,
 				AD8A3AA2293CEA4100B33D0F /* hittable_list.h */,
@@ -114,6 +118,7 @@
 		AD8A3AA6293CEAC300B33D0F /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				AD8A3AAF293D301000B33D0F /* imageio.h */,
 				AD8A3AAD293CEAFA00B33D0F /* gui.cpp */,
 				AD8A3AAA293CEAFA00B33D0F /* gui.h */,
 				AD8A3AAB293CEAFA00B33D0F /* rtweekend.h */,
@@ -134,6 +139,7 @@
 		ADC24C042932740800A97304 /* stb */ = {
 			isa = PBXGroup;
 			children = (
+				AD8A3AB1293D406000B33D0F /* stb_image_write.h */,
 				ADC24C052932743800A97304 /* stb_image.h */,
 			);
 			path = stb;
