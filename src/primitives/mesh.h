@@ -63,12 +63,7 @@ class mesh {
                         get_vertice_by_index(indices[3*i + 0].position_index), // first vertice
                         get_vertice_by_index(indices[3*i + 1].position_index), // second vertice
                         get_vertice_by_index(indices[3*i + 2].position_index), // third vertice
-                        make_shared<phong>(color(Ka[0], Ka[1], Ka[2]),
-                                           color(Kd[0], Kd[1], Kd[2]),
-                                           color(Ks[0], Ks[1], Ks[2]),
-                                           1)));
-                        //make_shared<lambertian>(color(Kd[0], Kd[1], Kd[2]))));
-                        //make_shared<lambertian>(color::random())));
+                        make_shared<lambertian>(color(Ka[0]+Kd[0], Ka[1]+Kd[1], Ka[2]+Kd[2]))));
                 }
             }
             

@@ -133,25 +133,4 @@ class isotropic : public material {
         shared_ptr<texture> albedo;
 };
 
-class phong : public material {
-    public:
-    phong(const color& _Ka, const color& _Kd, const color& _Ks, int _Ns) : Ka(_Ka), Kd(_Kd), Ks(_Ks), Ns(_Ns) {}
-
-        virtual bool scatter(
-            const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
-        ) const override {
-            // https://www.ccs.neu.edu/home/fell/CS4300/Lectures/Ray-TracingFormulas.pdf
-            const auto nl = dot(unit_vector(scattered.dir),unit_vector(rec.normal));
-            const auto hf = dot(unit_vector(r_in.dir+scattered.dir),unit_vector(rec.normal));
-            attenuation = Ka + nl*Kd + std::pow(hf,Ns)*Ks;
-            return true;
-        }
-
-    public:
-        color Ka;
-        color Kd;
-        color Ks;
-    int Ns;
-};
-
 #endif
