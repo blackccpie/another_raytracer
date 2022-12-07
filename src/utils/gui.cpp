@@ -1,6 +1,10 @@
 #include "gui.h"
 
-#define cimg_display 1 //X11
+#ifdef WIN32
+    #define cimg_display 2 //Windows-GDI
+#else
+    #define cimg_display 1 //X11
+#endif
 
 #include "CImg.h"
 

@@ -6,6 +6,8 @@
 #include "rtweekend.h"
 //#include "gui.h"
 
+#include <string>
+
 class texture {
     public:
         virtual color value(double u, double v, const point3& p) const = 0;

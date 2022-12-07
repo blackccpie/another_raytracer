@@ -263,7 +263,7 @@ int main() try
     constexpr int image_width = 640;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int color_channels = 3;
-    constexpr int scene_index = 9;
+    constexpr int scene_index = 1;
     
     // World
     hittable_list world;
@@ -365,13 +365,13 @@ int main() try
 
     std::array<std::uint8_t,image_width*image_height*color_channels> output_image{0};
 
-    engine eng( cam );
+    engine<image_width,image_height,color_channels> eng( cam, engine_mode::parallel_images );
     eng.set_scene(world,background);
-    auto elapsed_ms = eng.run( output_image.data(), image_width, image_height, color_channels);
+    auto elapsed_ms = eng.run( output_image.data() );
     
     std::cout << std::endl << "Rendering computed in milliseconds: " << elapsed_ms << " ms" << std::endl;
     
-    const auto total_rays = image_width * image_height * engine::samples_per_pixel;
+    const auto total_rays = image_width * image_height * eng.samples_per_pixel;
     const auto ray_processing_rate = static_cast<float>(total_rays) / elapsed_ms;
     
     std::cout << std::endl << "Processing rate: " << ray_processing_rate << "kRay/s" << std::endl;

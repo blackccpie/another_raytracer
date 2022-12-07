@@ -3,8 +3,6 @@
 
 #include "vec3.h"
 
-#include <iostream>
-
 void write_color(std::uint8_t* out, color pixel_color, int samples_per_pixel) {
     auto r = pixel_color.x();
     auto g = pixel_color.y();

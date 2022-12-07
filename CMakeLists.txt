@@ -37,16 +37,23 @@ set (headers_list
 
 add_executable(raycaster ${sources_list} ${headers_list})
 
-target_include_directories(raycaster PRIVATE
-    /opt/X11/include
+target_include_directories(raycaster SYSTEM PRIVATE
     3rd_parties/CImg
     3rd_parties/rapidobj
     3rd_parties/stb
+)
+
+target_include_directories(raycaster PRIVATE
     src/core
     src/engine
     src/primitives
     src/rendering
     src/utils
+)
+
+if(NOT WIN32)
+target_include_directories(raycaster SYSTEM PRIVATE
+    /opt/X11/include
 )
 
 target_link_directories(raycaster PRIVATE
@@ -56,3 +63,4 @@ target_link_directories(raycaster PRIVATE
 target_link_libraries(raycaster PRIVATE
     X11
 )
+endif()
