@@ -4,7 +4,7 @@
 #include "hittable.h"
 #include "vec3.h"
 
-class sphere : public hittable {
+class sphere final : public hittable {
     public:
         sphere(point3 cen, double r, shared_ptr<material> m)
             : center(cen), radius(r), mat_ptr(m) {}

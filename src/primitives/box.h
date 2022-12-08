@@ -6,7 +6,7 @@
 #include "aarect.h"
 #include "hittable_list.h"
 
-class box : public hittable  {
+class box final : public hittable  {
     public:
         box() {}
         box(const point3& p0, const point3& p1, shared_ptr<material> ptr);

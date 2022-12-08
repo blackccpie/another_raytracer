@@ -5,7 +5,7 @@
 
 #include "hittable.h"
 
-class xy_rect : public hittable {
+class xy_rect final : public hittable {
     public:
         xy_rect(double _x0, double _x1, double _y0, double _y1, double _k,
             shared_ptr<material> mat)
@@ -21,8 +21,8 @@ class xy_rect : public hittable {
         }
 
     public:
-        shared_ptr<material> mp;
         double x0, x1, y0, y1, k;
+        std::shared_ptr<material> mp;
 };
 
 bool xy_rect::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
@@ -43,7 +43,7 @@ bool xy_rect::hit(const ray& r, double t_min, double t_max, hit_record& rec) con
     return true;
 }
 
-class xz_rect : public hittable {
+class xz_rect final : public hittable {
     public:
         xz_rect() {}
 
@@ -61,8 +61,8 @@ class xz_rect : public hittable {
         }
 
     public:
-        shared_ptr<material> mp;
         double x0, x1, z0, z1, k;
+        std::shared_ptr<material> mp;
 };
 
 bool xz_rect::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
@@ -83,7 +83,7 @@ bool xz_rect::hit(const ray& r, double t_min, double t_max, hit_record& rec) con
     return true;
 }
 
-class yz_rect : public hittable {
+class yz_rect final : public hittable {
     public:
         yz_rect() {}
 

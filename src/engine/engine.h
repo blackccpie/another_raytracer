@@ -14,7 +14,7 @@ template<int image_width, int image_height, int color_channels>
 class engine
 {
 public:
-    engine( const camera& _cam, engine_mode _m) : cam(_cam), m(_m) {}
+    engine( const camera& _cam, engine_mode _m) : m(_m), cam(_cam) {}
     
     void set_scene(hittable_list _world, color _background)
     {
@@ -121,14 +121,14 @@ private:
     {
         std::atomic<size_t> progress = 0;
 
-        //thread_pool tp{4};
+        thread_pool tp{4};
 
-        std::array<int,image_width*image_height*color_channels> work_image1{0};
-        std::array<int,image_width*image_height*color_channels> work_image2{0};
-        std::array<int,image_width*image_height*color_channels> work_image3{0};
-        std::array<int,image_width*image_height*color_channels> work_image4{0};
+        std::array<float,image_width*image_height*color_channels> work_image1{0};
+        std::array<float,image_width*image_height*color_channels> work_image2{0};
+        std::array<float,image_width*image_height*color_channels> work_image3{0};
+        std::array<float,image_width*image_height*color_channels> work_image4{0};
 
-        auto run_image = [&](int* partial_image,int small_samples_per_pixel) {
+        auto run_image = [&](float* partial_image,int small_samples_per_pixel) {
             for (int j = 0; j < image_height; ++j) {
                 int offset = color_channels*j*image_width;
                 for (int i = 0; i < image_width; ++i) {
@@ -140,9 +140,9 @@ private:
                         pixel_color += _ray_color(r, background, world, max_depth);
                     }
                     auto* out = partial_image+offset;
-                    out[0] = pixel_color[0];
-                    out[1] = pixel_color[1];
-                    out[2] = pixel_color[2];
+                    out[0] = static_cast<float>(pixel_color[0]);
+                    out[1] = static_cast<float>(pixel_color[1]);
+                    out[2] = static_cast<float>(pixel_color[2]);
                     offset += color_channels;
                 }
                 progress++;
@@ -152,23 +152,18 @@ private:
         using namespace std::chrono_literals;
         const auto start = std::chrono::steady_clock::now();
 
-        std::cout << "BAAHHHHHHHHH" << std::endl;
-
-        run_image(work_image1.data(), samples_per_pixel);
-        //tp.add_job( [&](){ run_image(work_image1.data(), samples_per_pixel/4); } );
-        //tp.add_job( [&](){ run_image(work_image2.data(), samples_per_pixel/4); } );
-        //tp.add_job( [&](){ run_image(work_image3.data(), samples_per_pixel/4); } );
-        //tp.add_job( [&](){ run_image(work_image4.data(), samples_per_pixel/4); } );
-        /*while(true) {
-            const auto percent = 100*progress/image_height;
+        tp.add_job( [&](){ run_image(work_image1.data(), samples_per_pixel/4); } );
+        tp.add_job( [&](){ run_image(work_image2.data(), samples_per_pixel/4); } );
+        tp.add_job( [&](){ run_image(work_image3.data(), samples_per_pixel/4); } );
+        tp.add_job( [&](){ run_image(work_image4.data(), samples_per_pixel/4); } );
+        while(true) {
+            const auto percent = 100*progress/(4*image_height);
             std::cout << "Computing done @" << percent << "%\r" << std::flush;
             std::this_thread::sleep_for(100ms);
             if(percent >= 100)
                 break;
-        }*/
-        //tp.wait_all();
-
-        std::cout << "BOUHHHHHHHHH" << std::endl;
+        }
+        tp.wait_all();
 
         for (int j = 0; j < image_height; ++j) {
             int offset = color_channels*j*image_width;
@@ -183,7 +178,6 @@ private:
                 color pixel_color4(wk4[0], wk4[1], wk4[2]);
                 color pixel_acc = pixel_color1+pixel_color2+pixel_color3+pixel_color4;
                 auto* out = output_image+offset;
-                //std::cout << out[0] << std::endl;
                 write_color(out, pixel_acc, samples_per_pixel);
                 offset += color_channels;
             }
@@ -222,7 +216,7 @@ private:
     color background{0,0,0};
 
 public:
-    static constexpr int samples_per_pixel = 20;
+    static constexpr int samples_per_pixel = 100;
     static constexpr int max_depth = 20;
 };
 

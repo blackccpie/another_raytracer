@@ -37,6 +37,16 @@ set (headers_list
 
 add_executable(raycaster ${sources_list} ${headers_list})
 
+if(NOT WIN32)
+    # The argument size is a hexadecimal number with
+    # an optional leading 0x. The size should be an even multiple of 4KB, that is the
+    # last three hexadecimal digits should be zero
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-stack_size -Wl,0x1000000") # 16Mo stack limit
+
+    target_compile_options(raycaster PRIVATE "-Wall" "-Wconversion")
+
+endif()
+
 target_include_directories(raycaster SYSTEM PRIVATE
     3rd_parties/CImg
     3rd_parties/rapidobj
@@ -52,15 +62,15 @@ target_include_directories(raycaster PRIVATE
 )
 
 if(NOT WIN32)
-target_include_directories(raycaster SYSTEM PRIVATE
-    /opt/X11/include
-)
+    target_include_directories(raycaster SYSTEM PRIVATE
+        /opt/X11/include
+    )
 
-target_link_directories(raycaster PRIVATE
-    /opt/X11/lib
-)
+    target_link_directories(raycaster PRIVATE
+        /opt/X11/lib
+    )
 
-target_link_libraries(raycaster PRIVATE
-    X11
-)
+    target_link_libraries(raycaster PRIVATE
+        X11
+    )
 endif()

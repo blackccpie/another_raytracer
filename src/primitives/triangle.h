@@ -4,7 +4,7 @@
 #include "hittable.h"
 #include "vec3.h"
 
-class triangle : public hittable {
+class triangle final : public hittable {
     public:
         triangle(point3 _pt1, point3 _pt2, point3 _pt3, shared_ptr<material> m)
             : pt1(_pt1), pt2(_pt2), pt3(_pt3), mat_ptr(m) {}
@@ -33,12 +33,12 @@ bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
     // Step 1: finding P
      
     // check if ray and plane are parallel.
-    float normal_dot_ray_direction = dot(outward_normal,r.direction());
+    double normal_dot_ray_direction = dot(outward_normal,r.direction());
     if (std::fabs(normal_dot_ray_direction) < std::numeric_limits<double>::epsilon()) // TODO-AM: really a proper use of epsilon here?
         return false; //they are parallel so they don't intersect !
      
     // compute d parameter using equation 2
-    float d = -dot(outward_normal,pt1);
+    double d = -dot(outward_normal,pt1);
      
     // compute t (equation 3)
     double t = -(dot(outward_normal,r.origin()) + d) / normal_dot_ray_direction;
