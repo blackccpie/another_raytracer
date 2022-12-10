@@ -1,5 +1,7 @@
 #include "rtweekend.h"
 
+#include "ressources.h"
+
 #include "aarect.h"
 #include "box.h"
 #include "bvh.h"
@@ -235,7 +237,7 @@ hittable_list final_scene() {
 
 hittable_list mesh_scene() {
     mesh m;
-    if( m.parse("models/esquisse3/esquisse3.obj") ) {
+    if( m.parse(ressources::dino_obj_path) ) {
         hittable_list world;
         
         // mesh triangles
@@ -263,7 +265,7 @@ int main() try
     constexpr int image_width = 640;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int color_channels = 3;
-    constexpr int scene_index = 1;
+    constexpr int scene_index = 9;
     
     // World
     hittable_list world;
@@ -343,8 +345,11 @@ int main() try
         case 9:
             world = mesh_scene();
             background = color(0.10, 0.10, 0.10);
-            lookfrom = point3(-200,300,1100);
-            lookat = point3(200,-150,0);
+            //house
+            //lookfrom = point3(-200,300,1100);
+            //lookat = point3(200,-150,0);
+            lookfrom = point3(0,25,25);
+            lookat = point3(0,0,0);
             vfov = 75.0;
             aperture = 0.1;
             break;

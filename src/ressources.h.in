@@ -1,0 +1,12 @@
+#ifndef RESSOURCE_H
+#define RESSOURCE_H
+
+namespace ressources {
+
+const std::string cow_obj_path = "@RAYCASTER_ROOT_PATH@/models/cow.obj";
+const std::string dino_obj_path = "@RAYCASTER_ROOT_PATH@/models/dino.obj";
+const std::string house_obj_path = "@RAYCASTER_ROOT_PATH@/models/house/house.obj";
+
+} // namespace ressources
+
+#endif

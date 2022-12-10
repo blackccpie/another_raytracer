@@ -4,6 +4,11 @@ project (raycaster)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+set(RAYCASTER_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+configure_file(src/ressources.h.in ressources.h @ONLY)
+
 set (sources_list
     src/utils/gui.cpp
     src/main.cpp
