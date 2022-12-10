@@ -13,7 +13,7 @@ class texture {
         virtual color value(double u, double v, const point3& p) const = 0;
 };
 
-class solid_color : public texture {
+class solid_color final : public texture {
     public:
         solid_color(color c) : color_value(c) {}
 
@@ -28,7 +28,7 @@ class solid_color : public texture {
         color color_value;
 };
 
-class checker_texture : public texture {
+class checker_texture final : public texture {
     public:
         checker_texture(shared_ptr<texture> _even, shared_ptr<texture> _odd)
             : even(_even), odd(_odd) {}
@@ -45,11 +45,11 @@ class checker_texture : public texture {
         }
 
     public:
-        shared_ptr<texture> odd;
-        shared_ptr<texture> even;
+        std::shared_ptr<texture> even;
+        std::shared_ptr<texture> odd;
 };
 
-class noise_texture : public texture {
+class noise_texture final : public texture {
     public:
         noise_texture() {}
         noise_texture(double sc) : scale(sc) {}
@@ -64,7 +64,7 @@ class noise_texture : public texture {
         double scale;
 };
 
-class image_texture : public texture {
+class image_texture final : public texture {
     public:
         image_texture()
           : data(nullptr), width(0), height(0), bytes_per_pixel(0), bytes_per_scanline(0) {}

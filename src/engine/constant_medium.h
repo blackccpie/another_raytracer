@@ -7,7 +7,7 @@
 #include "material.h"
 #include "texture.h"
 
-class constant_medium : public hittable {
+class constant_medium final : public hittable {
     public:
         constant_medium(shared_ptr<hittable> b, double d, shared_ptr<texture> a)
             : boundary(b),

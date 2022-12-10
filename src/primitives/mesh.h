@@ -55,15 +55,24 @@ class mesh {
                 //std::cout << "shape: " << indices.size() << std::endl;
                 
                 for(size_t i=0; i<indices.size()/3; ++i) {
-                    rapidobj::Material m = parse_data.materials[material_ids[i]];
-                    const auto Ka = m.ambient;
-                    const auto Kd = m.diffuse;
-                    //const auto Ks = m.specular;
-                    triangles.add(make_shared<triangle>(
-                        get_vertice_by_index(indices[3*i + 0].position_index), // first vertice
-                        get_vertice_by_index(indices[3*i + 1].position_index), // second vertice
-                        get_vertice_by_index(indices[3*i + 2].position_index), // third vertice
-                        make_shared<lambertian>(color(Ka[0]+Kd[0], Ka[1]+Kd[1], Ka[2]+Kd[2]))));
+                    if(!parse_data.materials.empty()) {
+                        rapidobj::Material m = parse_data.materials[material_ids[i]];
+                        const auto Ka = m.ambient;
+                        const auto Kd = m.diffuse;
+                        //const auto Ks = m.specular;
+                        triangles.add(make_shared<triangle>(
+                            get_vertice_by_index(indices[3*i + 0].position_index), // first vertice
+                            get_vertice_by_index(indices[3*i + 1].position_index), // second vertice
+                            get_vertice_by_index(indices[3*i + 2].position_index), // third vertice
+                            make_shared<lambertian>(color(Ka[0]+Kd[0], Ka[1]+Kd[1], Ka[2]+Kd[2]))));
+                    }
+                    else {
+                        triangles.add(make_shared<triangle>(
+                            get_vertice_by_index(indices[3*i + 0].position_index), // first vertice
+                            get_vertice_by_index(indices[3*i + 1].position_index), // second vertice
+                            get_vertice_by_index(indices[3*i + 2].position_index), // third vertice
+                            make_shared<lambertian>(color::random())));
+                    }
                 }
             }
             

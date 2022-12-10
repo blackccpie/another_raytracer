@@ -28,7 +28,7 @@ class hittable {
         virtual bool bounding_box(double time0, double time1, aabb& output_box) const = 0;
 };
 
-class translate : public hittable {
+class translate final : public hittable {
     public:
         translate(shared_ptr<hittable> p, const vec3& displacement)
             : ptr(p), offset(displacement) {}
@@ -65,7 +65,7 @@ bool translate::bounding_box(double time0, double time1, aabb& output_box) const
     return true;
 }
 
-class rotate_y : public hittable {
+class rotate_y final : public hittable {
     public:
         rotate_y(shared_ptr<hittable> p, double angle);
 

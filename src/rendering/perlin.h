@@ -8,8 +8,9 @@
 class perlin {
     public:
         perlin() {
-            for (int i = 0; i < point_count; ++i) {
-                ranvec[i] = unit_vector(vec3::random(-1,1));
+            for( auto& v : ranvec )
+            {
+                v = unit_vector(vec3::random(-1,1));
             }
 
             perlin_generate_perm(perm_x.data());

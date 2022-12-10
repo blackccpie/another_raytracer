@@ -101,8 +101,8 @@ class yz_rect final : public hittable {
         }
 
     public:
-        shared_ptr<material> mp;
         double y0, y1, z0, z1, k;
+        std::shared_ptr<material> mp;
 };
 
 bool yz_rect::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {

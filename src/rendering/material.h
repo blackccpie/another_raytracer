@@ -16,7 +16,7 @@ class material {
         ) const = 0;
 };
 
-class lambertian : public material {
+class lambertian final : public material {
     public:
         lambertian(const color& a) : albedo(make_shared<solid_color>(a)) {}
         lambertian(shared_ptr<texture> a) : albedo(a) {}
@@ -41,7 +41,7 @@ class lambertian : public material {
         shared_ptr<texture> albedo;
 };
 
-class metal : public material {
+class metal final : public material {
     public:
     metal(const color& a, double f) : albedo(a), fuzz(f < 1. ? f : 1.) {}
 
@@ -59,7 +59,7 @@ class metal : public material {
         double fuzz;
 };
 
-class dielectric : public material {
+class dielectric final : public material {
     public:
         dielectric(double index_of_refraction) : ir(index_of_refraction) {}
 
@@ -97,7 +97,7 @@ class dielectric : public material {
         }
 };
 
-class diffuse_light : public material  {
+class diffuse_light final : public material  {
     public:
         diffuse_light(shared_ptr<texture> a) : emit(a) {}
         diffuse_light(color c) : emit(make_shared<solid_color>(c)) {}
@@ -116,7 +116,7 @@ class diffuse_light : public material  {
         shared_ptr<texture> emit;
 };
 
-class isotropic : public material {
+class isotropic final : public material {
     public:
         isotropic(color c) : albedo(make_shared<solid_color>(c)) {}
         isotropic(shared_ptr<texture> a) : albedo(a) {}
