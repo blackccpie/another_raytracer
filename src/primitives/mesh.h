@@ -41,11 +41,11 @@ class mesh {
         hittable_list build() {
             hittable_list triangles;
             
-            auto get_vertice_by_index = [this](size_t index) {
+            auto get_vertice_by_index = [this]<typename T>(T index) {
                 const rapidobj::Array<float>& positions = parse_data.attributes.positions;
-                return vec3{positions[3*index+0],
-                            positions[3*index+1],
-                            positions[3*index+2]};
+                return vec3{positions[static_cast<size_t>(3*index)+0UL],
+                            positions[static_cast<size_t>(3*index)+1UL],
+                            positions[static_cast<size_t>(3*index)+2UL]};
             };
             
             for (const auto& shape : parse_data.shapes) {
@@ -56,15 +56,21 @@ class mesh {
                 
                 for(size_t i=0; i<indices.size()/3; ++i) {
                     if(!parse_data.materials.empty()) {
-                        rapidobj::Material m = parse_data.materials[material_ids[i]];
+                        rapidobj::Material m = parse_data.materials[static_cast<size_t>(material_ids[i])];
                         const auto Ka = m.ambient;
                         const auto Kd = m.diffuse;
                         //const auto Ks = m.specular;
-                        triangles.add(make_shared<triangle>(
-                            get_vertice_by_index(indices[3*i + 0].position_index), // first vertice
-                            get_vertice_by_index(indices[3*i + 1].position_index), // second vertice
-                            get_vertice_by_index(indices[3*i + 2].position_index), // third vertice
-                            make_shared<lambertian>(color(Ka[0]+Kd[0], Ka[1]+Kd[1], Ka[2]+Kd[2]))));
+                        const auto map_Kd = m.diffuse_texname;
+                        if(!map_Kd.empty()) {
+                            // TODO
+                        }
+                        else {
+                            triangles.add(make_shared<triangle>(
+                                get_vertice_by_index(indices[3*i + 0].position_index), // first vertice
+                                get_vertice_by_index(indices[3*i + 1].position_index), // second vertice
+                                get_vertice_by_index(indices[3*i + 2].position_index), // third vertice
+                                make_shared<lambertian>(color(Ka[0]+Kd[0], Ka[1]+Kd[1], Ka[2]+Kd[2]))));
+                        }
                     }
                     else {
                         triangles.add(make_shared<triangle>(

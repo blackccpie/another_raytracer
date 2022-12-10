@@ -30,11 +30,11 @@ class perlin {
             for (int di=0; di < 2; di++)
                 for (int dj=0; dj < 2; dj++)
                     for (int dk=0; dk < 2; dk++)
-                        c[di][dj][dk] = ranvec[
-                            perm_x[(i+di) & 255] ^
-                            perm_y[(j+dj) & 255] ^
-                            perm_z[(k+dk) & 255]
-                        ];
+                        c[di][dj][dk] = ranvec[static_cast<size_t>(
+                            perm_x[static_cast<size_t>((i+di) & 255)] ^
+                            perm_y[static_cast<size_t>((j+dj) & 255)] ^
+                            perm_z[static_cast<size_t>((k+dk) & 255)]
+                        )];
 
             return perlin_interp(c, u, v, w);
         }

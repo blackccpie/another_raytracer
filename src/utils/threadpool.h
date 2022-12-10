@@ -18,7 +18,7 @@ public:
         , m_thread_count( thread_count )
     {
         for( unsigned i = 0; i < m_thread_count; ++i )
-            m_threads.emplace_back( std::thread( [this,i]{ this->task(); } ) );
+            m_threads.emplace_back( std::thread( [this/*,i*/]{ this->task(); } ) );
     }
 
     /**

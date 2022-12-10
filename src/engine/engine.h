@@ -46,7 +46,7 @@ private:
     
     int _run_single(std::uint8_t* output_image)
     {
-        size_t progress = 0;
+        int progress = 0;
 
         const auto start = std::chrono::steady_clock::now();
         
@@ -74,14 +74,14 @@ private:
 
     int _run_parallel_stripes(std::uint8_t* output_image)
     {
-        std::atomic<size_t> progress = 0;
+        std::atomic<int> progress = 0;
 
         thread_pool tp{4};
         
         auto run_stripe = [&](int j0, int j1) {
             for (int j = j0; j < j1; ++j) {
                 int offset = color_channels*j*image_width;
-                for (int i = 0; i < image_width; ++i) {
+                for (size_t i = 0; i < image_width; ++i) {
                     color pixel_color(0, 0, 0);
                     for (int s = 0; s < samples_per_pixel; ++s) {
                         auto u = (i + random_double()) / (image_width-1);
@@ -119,7 +119,7 @@ private:
 
     int _run_parallel_images(std::uint8_t* output_image)
     {
-        std::atomic<size_t> progress = 0;
+        std::atomic<int> progress = 0;
 
         thread_pool tp{4};
 
@@ -217,7 +217,7 @@ private:
 
 public:
     static constexpr int samples_per_pixel = 100;
-    static constexpr int max_depth = 20;
+    static constexpr int max_depth = 50;
 };
 
 #endif

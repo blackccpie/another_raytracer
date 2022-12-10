@@ -73,11 +73,11 @@ bvh_node::bvh_node(
             right = objects[start];
         }
     } else {
-        std::sort(objects.begin() + start, objects.begin() + end, comparator);
+        std::sort(objects.begin() + static_cast<std::ptrdiff_t>(start), objects.begin() + static_cast<std::ptrdiff_t>(end), comparator);
 
         auto mid = start + object_span/2;
-        left = make_shared<bvh_node>(objects, start, mid, time0, time1);
-        right = make_shared<bvh_node>(objects, mid, end, time0, time1);
+        left = std::make_shared<bvh_node>(objects, start, mid, time0, time1);
+        right = std::make_shared<bvh_node>(objects, mid, end, time0, time1);
     }
 
     aabb box_left, box_right;

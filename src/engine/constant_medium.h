@@ -29,9 +29,9 @@ class constant_medium final : public hittable {
         }
 
     public:
-        shared_ptr<hittable> boundary;
-        shared_ptr<material> phase_function;
+        std::shared_ptr<hittable> boundary;
         double neg_inv_density;
+        std::shared_ptr<material> phase_function;
 };
 
 bool constant_medium::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
