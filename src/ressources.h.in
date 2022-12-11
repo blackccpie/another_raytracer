@@ -3,11 +3,15 @@
 
 namespace ressources {
 
-const std::string cow_obj_path = "@RAYCASTER_ROOT_PATH@/models/cow.obj";
-const std::string dino_obj_path = "@RAYCASTER_ROOT_PATH@/models/dino.obj";
-const std::string capsule_obj_path = "@RAYCASTER_ROOT_PATH@/models/capsule/capsule.obj";
+const std::string models_path = "@RAYCASTER_ROOT_PATH@/models/";
 
-const std::string earthmap_texture = "@RAYCASTER_ROOT_PATH@/textures/earthmap.jpg";
+const std::string cow_obj_path = models_path + "cow.obj";
+const std::string dino_obj_path = models_path + "dino.obj";
+const std::string capsule_obj_path = models_path + "capsule/capsule.obj";
+
+const std::string textures_path = "@RAYCASTER_ROOT_PATH@/textures/";
+
+const std::string earthmap_texture = textures_path + "earthmap.jpg";
 
 } // namespace ressources
 

@@ -113,4 +113,18 @@ class image_texture final : public texture {
         int bytes_per_scanline;
 };
 
+class barycentric_texture final : public texture {
+    public:
+        barycentric_texture(color a, color b, color c) : color_a(a), color_b(b), color_c(c) {}
+
+        virtual color value(double u, double v, const vec3& p) const override {
+            return u*color_a + v*color_b + (1.0-u-v)*color_c;
+        }
+
+    private:
+        color color_a;
+        color color_b;
+        color color_c;
+};
+
 #endif

@@ -76,12 +76,12 @@ bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
     vec3 vpt3 = p - pt3;
     c = cross(edge3,vpt3);
     if ((v=dot(outward_normal,c)) < 0) return false; // p is on the right (out) side
- 
+
     rec.t = t;
     rec.p = p;
     rec.set_face_normal(r, outward_normal);
-    rec.u = u/outward_normal.length();
-    rec.v = v/outward_normal.length();
+    rec.u = u/outward_normal.length_squared(); // here u,v are local barycentric coordinates
+    rec.v = v/outward_normal.length_squared();
     rec.mat_ptr = mat_ptr;
     
     return true;
