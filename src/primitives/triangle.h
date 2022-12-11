@@ -23,6 +23,7 @@ bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
     
     // INSPIRED BY:
     // www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/ray-triangle-intersection-geometric-solution
+    // https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates
     
     // compute plane's normal
     vec3 v1v2 = pt2 - pt1;
@@ -55,6 +56,7 @@ bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
  
     // Step 2: inside-outside test
     
+    double u,v;
     vec3 c; //vector perpendicular to triangle's plane
  
     // edge 1
@@ -67,17 +69,19 @@ bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
     vec3 edge2 = pt3 - pt2;
     vec3 vpt2 = p - pt2;
     c = cross(edge2,vpt2);
-    if (dot(outward_normal,c) < 0)  return false; // p is on the right (out) side
+    if ((u=dot(outward_normal,c)) < 0)  return false; // p is on the right (out) side
  
     // edge 3
     vec3 edge3 = pt1 - pt3;
     vec3 vpt3 = p - pt3;
     c = cross(edge3,vpt3);
-    if (dot(outward_normal,c) < 0) return false; // p is on the right (out) side
+    if ((v=dot(outward_normal,c)) < 0) return false; // p is on the right (out) side
  
     rec.t = t;
     rec.p = p;
     rec.set_face_normal(r, outward_normal);
+    rec.u = u/outward_normal.length();
+    rec.v = v/outward_normal.length();
     rec.mat_ptr = mat_ptr;
     
     return true;

@@ -86,7 +86,7 @@ hittable_list two_spheres() {
 hittable_list two_perlin_spheres() {
     hittable_list objects;
 
-    auto pertext = make_shared<noise_texture>(0.1);
+    auto pertext = make_shared<noise_texture>();
     objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
     objects.add(make_shared<sphere>(point3(0, 2, 0), 2, make_shared<lambertian>(pertext)));
 
@@ -94,7 +94,7 @@ hittable_list two_perlin_spheres() {
 }
 
 hittable_list earth() {
-    auto earth_texture = make_shared<image_texture>("textures/earthmap.jpg");
+    auto earth_texture = make_shared<image_texture>(ressources::earthmap_texture);
     auto earth_surface = make_shared<lambertian>(earth_texture);
     auto globe = make_shared<sphere>(point3(0,0,0), 2, earth_surface);
 
@@ -213,7 +213,7 @@ hittable_list final_scene() {
     boundary = make_shared<sphere>(point3(0, 0, 0), 5000, make_shared<dielectric>(1.5));
     objects.add(make_shared<constant_medium>(boundary, .0001, color(1,1,1)));
 
-    auto emat = make_shared<lambertian>(make_shared<image_texture>("textures/earthmap.jpg"));
+    auto emat = make_shared<lambertian>(make_shared<image_texture>(ressources::earthmap_texture));
     objects.add(make_shared<sphere>(point3(400,200,400), 100, emat));
     auto pertext = make_shared<noise_texture>(0.1);
     objects.add(make_shared<sphere>(point3(220,280,300), 80, make_shared<lambertian>(pertext)));
@@ -237,7 +237,7 @@ hittable_list final_scene() {
 
 hittable_list mesh_scene() {
     mesh m;
-    if( m.parse(ressources::dino_obj_path) ) {
+    if( m.parse(ressources::capsule_obj_path) ) {
         hittable_list world;
         
         // mesh triangles
@@ -258,15 +258,21 @@ hittable_list mesh_scene() {
         throw std::logic_error("cannot parse input obj file!");
 }
 
-int main() try
+int main(int argc, char **argv) try
 {
     // Image
     constexpr auto aspect_ratio = 16.0 / 9.0;
     constexpr int image_width = 640;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int color_channels = 3;
-    constexpr int scene_index = 9;
+    int scene_index = 9;
     
+    // Optional scene index parameter
+    if(argc >= 2)
+    {
+        scene_index = std::atoi(argv[1]);
+    } 
+
     // World
     hittable_list world;
 
@@ -348,7 +354,14 @@ int main() try
             //house
             //lookfrom = point3(-200,300,1100);
             //lookat = point3(200,-150,0);
-            lookfrom = point3(0,25,25);
+            //dino
+            //lookfrom = point3(0,15,25);
+            //lookat = point3(0,10,0);
+            //cow
+            //lookfrom = point3(4,2,6);
+            //lookat = point3(2,0,0);
+            //capsule
+            lookfrom = point3(2,2,0);
             lookat = point3(0,0,0);
             vfov = 75.0;
             aperture = 0.1;

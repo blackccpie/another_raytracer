@@ -5,7 +5,9 @@ namespace ressources {
 
 const std::string cow_obj_path = "@RAYCASTER_ROOT_PATH@/models/cow.obj";
 const std::string dino_obj_path = "@RAYCASTER_ROOT_PATH@/models/dino.obj";
-const std::string house_obj_path = "@RAYCASTER_ROOT_PATH@/models/house/house.obj";
+const std::string capsule_obj_path = "@RAYCASTER_ROOT_PATH@/models/capsule/capsule.obj";
+
+const std::string earthmap_texture = "@RAYCASTER_ROOT_PATH@/textures/earthmap.jpg";
 
 } // namespace ressources
 

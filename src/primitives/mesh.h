@@ -28,6 +28,7 @@ class mesh {
             size_t num_triangles = 0;
 
             for (const auto& shape : parse_data.shapes) {
+                // TODO-AM : should work!!
                 //if(shape.mesh.num_face_vertices.size() != 3)
                 //    throw std::logic_error("only tri-mesh are supported for now! "+std::to_string(shape.mesh.num_face_vertices.size()));
                 num_triangles += shape.mesh.num_face_vertices.size();
@@ -37,10 +38,13 @@ class mesh {
             std::cout << "mesh number of triangles: " << num_triangles << '\n';
             
             return true;
-        };
+        }
+
         hittable_list build() {
             hittable_list triangles;
             
+            auto capsule_texture = std::make_shared<image_texture>("/Users/albertmurienne/Public/raycaster/models/capsule/capsule.jpg");
+
             auto get_vertice_by_index = [this]<typename T>(T index) {
                 const rapidobj::Array<float>& positions = parse_data.attributes.positions;
                 return vec3{positions[static_cast<size_t>(3*index)+0UL],
@@ -62,10 +66,15 @@ class mesh {
                         //const auto Ks = m.specular;
                         const auto map_Kd = m.diffuse_texname;
                         if(!map_Kd.empty()) {
-                            // TODO
+                            //std::cout << "material: " << map_Kd << std::endl;
+                            triangles.add(std::make_shared<triangle>(
+                                get_vertice_by_index(indices[3*i + 0].position_index), // first vertice
+                                get_vertice_by_index(indices[3*i + 1].position_index), // second vertice
+                                get_vertice_by_index(indices[3*i + 2].position_index), // third vertice
+                                make_shared<lambertian>(capsule_texture)));
                         }
                         else {
-                            triangles.add(make_shared<triangle>(
+                            triangles.add(std::make_shared<triangle>(
                                 get_vertice_by_index(indices[3*i + 0].position_index), // first vertice
                                 get_vertice_by_index(indices[3*i + 1].position_index), // second vertice
                                 get_vertice_by_index(indices[3*i + 2].position_index), // third vertice
@@ -73,7 +82,7 @@ class mesh {
                         }
                     }
                     else {
-                        triangles.add(make_shared<triangle>(
+                        triangles.add(std::make_shared<triangle>(
                             get_vertice_by_index(indices[3*i + 0].position_index), // first vertice
                             get_vertice_by_index(indices[3*i + 1].position_index), // second vertice
                             get_vertice_by_index(indices[3*i + 2].position_index), // third vertice
@@ -81,11 +90,14 @@ class mesh {
                     }
                 }
             }
+
+            std::cout << "hittable list successfully built from mesh description (" << triangles.size() << " hittables)" << std::endl;
             
             return triangles;
         }
+
     private:
-    rapidobj::Result parse_data;
+        rapidobj::Result parse_data;
 };
 
 #endif
