@@ -86,7 +86,7 @@ hittable_list two_spheres() {
 hittable_list two_perlin_spheres() {
     hittable_list objects;
 
-    auto pertext = make_shared<noise_texture>();
+    auto pertext = make_shared<noise_texture>(4);
     objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
     objects.add(make_shared<sphere>(point3(0, 2, 0), 2, make_shared<lambertian>(pertext)));
 
@@ -350,7 +350,8 @@ int main(int argc, char **argv) try
             
         case 9:
             world = mesh_scene();
-            background = color(0.10, 0.10, 0.10);
+            //background = color(0.10, 0.10, 0.10);
+            background = color(0.70, 0.80, 1.00);
             //house
             //lookfrom = point3(-200,300,1100);
             //lookat = point3(200,-150,0);
@@ -361,10 +362,10 @@ int main(int argc, char **argv) try
             //lookfrom = point3(4,2,6);
             //lookat = point3(2,0,0);
             //capsule
-            lookfrom = point3(2,2,0);
+            lookfrom = point3(2,2,1);
             lookat = point3(0,0,0);
             vfov = 75.0;
-            aperture = 0.1;
+            //aperture = 0.1;
             break;
             
         default:
