@@ -51,7 +51,7 @@ class checker_texture final : public texture {
 
 class noise_texture final : public texture {
     public:
-        noise_texture() {}
+
         noise_texture(double sc) : scale(sc) {}
 
         virtual color value(double u, double v, const point3& p) const override {
@@ -66,8 +66,6 @@ class noise_texture final : public texture {
 
 class image_texture final : public texture {
     public:
-        image_texture()
-          : data(nullptr), width(0), height(0), bytes_per_pixel(0), bytes_per_scanline(0) {}
 
         image_texture(const std::string& filename) {
             
@@ -77,10 +75,14 @@ class image_texture final : public texture {
                 std::cerr << "ERROR: Could not load texture image file '" << filename << "'.\n";
                 width = height = 0;
             }
+            else
+            {
+                std::cout << "successfully loaded texture image (" << width << "x" << height << "x" << bytes_per_pixel << ")" << std::endl;
+            }
 
             bytes_per_scanline = bytes_per_pixel * width;
             
-            //gui::display( data, width, height );
+            //gui::display( data.get(), width, height );
         }
 
         virtual color value(double u, double v, const point3& p) const override {
@@ -100,6 +102,8 @@ class image_texture final : public texture {
             if (i >= width)  i = width-1;
             if (j >= height) j = height-1;
 
+            //std::cout << "ij " << i << " " << j << std::endl;
+
             const auto color_scale = 1.0 / 255.0;
             auto pixel = data.get() + j*bytes_per_scanline + i*bytes_per_pixel;
             
@@ -109,10 +113,11 @@ class image_texture final : public texture {
     private:
 
         std::unique_ptr<unsigned char[]> data;
-        int width, height, bytes_per_pixel;
-        int bytes_per_scanline;
+        int width = 0, height = 0, bytes_per_pixel = 0;
+        int bytes_per_scanline = 0;
 };
 
+// TODO-AM : not sure this texturing approach will be usefull...
 class barycentric_texture final : public texture {
     public:
         barycentric_texture(color a, color b, color c) : color_a(a), color_b(b), color_c(c) {}
@@ -125,6 +130,27 @@ class barycentric_texture final : public texture {
         color color_a;
         color color_b;
         color color_c;
+};
+
+class barycentric_image_texture final : public texture {
+    public:
+        using uv = std::pair<double,double>;
+        barycentric_image_texture(uv a, uv b, uv c, std::shared_ptr<image_texture> _tex) 
+            : texcoord_a(a), texcoord_b(b), texcoord_c(c), tex(_tex) {}
+
+        virtual color value(double u, double v, const vec3& p) const override {
+            return tex->value(
+                u * texcoord_a.first + v * texcoord_b.first + (1-u-v) * texcoord_c.first,
+                u * texcoord_a.second + v * texcoord_b.second + (1-u-v) * texcoord_c.second,
+                vec3{}
+            );
+        }
+
+    private:
+        uv texcoord_a;
+        uv texcoord_b;
+        uv texcoord_c;
+        std::shared_ptr<image_texture> tex;
 };
 
 #endif

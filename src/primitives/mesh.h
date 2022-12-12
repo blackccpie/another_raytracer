@@ -43,7 +43,7 @@ class mesh {
         hittable_list build() {
             hittable_list triangles;
             
-            auto capsule_texture = image_texture(ressources::models_path+"capsule/capsule.jpg");
+            auto capsule_texture = std::make_shared<image_texture>(ressources::models_path+"capsule/capsule.jpg");
 
             auto get_vertice_by_index = [this]<typename T>(T index) {
                 const rapidobj::Array<float>& positions = parse_data.attributes.positions;
@@ -53,11 +53,10 @@ class mesh {
                     positions[static_cast<size_t>(3*index)+2UL]};
             };
 
-            auto get_texcoord_by_index = [this]<typename T>(T index) {
+            auto get_texcoord_by_index = [this]<typename T>(T index) -> std::pair<double,double> {
                 const rapidobj::Array<float>& texcoords = parse_data.attributes.texcoords;
-                return std::make_pair<double>(
-                        texcoords[static_cast<size_t>(2*index)+0UL],
-                        texcoords[static_cast<size_t>(2*index)+1UL]);
+                return {texcoords[static_cast<size_t>(2*index)+0UL],
+                        texcoords[static_cast<size_t>(2*index)+1UL]};
             };
             
             for (const auto& shape : parse_data.shapes) {
@@ -76,15 +75,15 @@ class mesh {
                         if(!map_Kd.empty()) {
                             //std::cout << "material: " << map_Kd << std::endl;
 
-                            const vec3 null_p; // defaults to 0,0,0
                             auto [u1,v1] = get_texcoord_by_index(indices[3*i + 0].texcoord_index);
                             auto [u2,v2] = get_texcoord_by_index(indices[3*i + 1].texcoord_index);
                             auto [u3,v3] = get_texcoord_by_index(indices[3*i + 2].texcoord_index);
 
-                            auto triangle_texture = std::make_shared<barycentric_texture>(
-                                capsule_texture.value(u1,v1,null_p),
-                                capsule_texture.value(u2,v2,null_p),
-                                capsule_texture.value(u3,v3,null_p)
+                            auto triangle_texture = std::make_shared<barycentric_image_texture>(
+                                std::make_pair(u1,v1),
+                                std::make_pair(u2,v2),
+                                std::make_pair(u3,v3),
+                                capsule_texture
                             );
                             triangles.add(std::make_shared<triangle>(
                                 get_vertice_by_index(indices[3*i + 0].position_index), // first vertice
