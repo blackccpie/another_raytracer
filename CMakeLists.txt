@@ -77,5 +77,6 @@ if(NOT WIN32)
 
     target_link_libraries(raycaster PRIVATE
         X11
+        pthread
     )
 endif()
