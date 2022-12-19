@@ -87,15 +87,18 @@ private:
         const auto [cr1,cg1,cb1] = std::tuple{  upleft_corner[0], 
                                                 upleft_corner[1], 
                                                 upleft_corner[2] };
-        const auto [cr2,cg2,cb2] = std::tuple{  upleft_corner[0+3*(square_length-1)], 
-                                                upleft_corner[1+3*(square_length-1)], 
-                                                upleft_corner[2+3*(square_length-1)] };
-        const auto [cr3,cg3,cb3] = std::tuple{  upleft_corner[0+3*(square_length-1)*square_line_offset], 
-                                                upleft_corner[1+3*(square_length-1)*square_line_offset], 
-                                                upleft_corner[2+3*(square_length-1)*square_line_offset] };
-        const auto [cr4,cg4,cb4] = std::tuple{  upleft_corner[0+3*(square_length-1)*square_line_offset+3*(square_length-1)], 
-                                                upleft_corner[1+3*(square_length-1)*square_line_offset+3*(square_length-1)], 
-                                                upleft_corner[2+3*(square_length-1)*square_line_offset+3*(square_length-1)] };
+        const auto [cr2,cg2,cb2] = std::tuple{  upleft_corner[0+3*square_length], 
+                                                upleft_corner[1+3*square_length], 
+                                                upleft_corner[2+3*square_length] };
+        if(cr2 == -128) return false;
+        const auto [cr3,cg3,cb3] = std::tuple{  upleft_corner[0+3*square_length*square_line_offset], 
+                                                upleft_corner[1+3*square_length*square_line_offset], 
+                                                upleft_corner[2+3*square_length*square_line_offset] };
+        if(cr3 == -128) return false;
+        const auto [cr4,cg4,cb4] = std::tuple{  upleft_corner[0+3*square_length*square_line_offset+3*square_length], 
+                                                upleft_corner[1+3*square_length*square_line_offset+3*square_length], 
+                                                upleft_corner[2+3*square_length*square_line_offset+3*square_length] };
+        if(cr4 == -128) return false;
 
         auto flag_subnodes = [&]() {
             upleft_corner[0+3*square_length/2] = -2;
@@ -107,7 +110,6 @@ private:
         };
 
         const auto distance1 = (cr1 - cr2)*(cr1 - cr2) + (cg1 - cg2)*(cg1 - cg2) + (cb1 - cb2)*(cb1 - cb2);
-        //std::cout << "distance1 " << distance1 << std::endl;
         if( distance1 > subdivide_thresh) return flag_subnodes();
         const auto distance2 = (cr2 - cr4)*(cr2 - cr4) + (cg2 - cg4)*(cg2 - cg4) + (cb2 - cb4)*(cb2 - cb4);
         if( distance2 > subdivide_thresh) return flag_subnodes();
@@ -123,8 +125,9 @@ private:
     {
         int progress = 0;
 
-        std::array<int,image_width*image_height*color_channels> work_image{-1};
-
+        std::array<int,image_width*image_height*color_channels> work_image;
+        work_image.fill(-128);
+        
         const auto start = std::chrono::steady_clock::now();
         
         for (int j = 0; j < image_height; j+=8) {
