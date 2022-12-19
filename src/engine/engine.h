@@ -6,6 +6,7 @@
 enum class engine_mode
     {
         single,
+        adaptive,
         parallel_stripes,
         parallel_images
     };
@@ -35,6 +36,8 @@ public:
         case engine_mode::single:
         default:
             return _run_single(output_image);
+        case engine_mode::adaptive:
+            return _run_adaptive(output_image);
         case engine_mode::parallel_stripes:
             return _run_parallel_stripes(output_image);
         case engine_mode::parallel_images:
@@ -44,6 +47,18 @@ public:
     
 private:
     
+    inline color _stochastic_sample(int i, int j, int _samples_per_pixel = samples_per_pixel)
+    {
+        color pixel_color(0, 0, 0);
+        for (int s = 0; s < _samples_per_pixel; ++s) {
+            auto u = (i + random_double()) / (image_width-1);
+            auto v = ((image_height-1-j) + random_double()) / (image_height-1); // spatial convention, not image convention!
+            ray r = cam.get_ray(u, v);
+            pixel_color += _ray_color(r, background, world, max_depth);
+        }
+        return pixel_color;
+    }
+
     int _run_single(std::uint8_t* output_image)
     {
         int progress = 0;
@@ -55,17 +70,143 @@ private:
             std::cout << "Computing done @" << progress << "%\r" << std::flush;
             int offset = color_channels*j*image_width;
             for (int i = 0; i < image_width; ++i) {
-                color pixel_color(0, 0, 0);
-                for (int s = 0; s < samples_per_pixel; ++s) {
-                    auto u = (i + random_double()) / (image_width-1);
-                    auto v = ((image_height-1-j) + random_double()) / (image_height-1); // spatial convention, not image convention!
-                    ray r = cam.get_ray(u, v);
-                    pixel_color += _ray_color(r, background, world, max_depth);
-                }
-                write_color(output_image+offset, pixel_color, samples_per_pixel);
+                write_color(output_image+offset, _stochastic_sample(i,j), samples_per_pixel);
                 offset += color_channels;
             }
         }
+
+        const auto end = std::chrono::steady_clock::now();
+        const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        return static_cast<int>(elapsed_ms);
+    }
+
+    bool _compute_corners_heuristic(int* upleft_corner, size_t square_length, size_t square_line_offset)
+    {
+        constexpr int subdivide_thresh = 100;
+
+        const auto [cr1,cg1,cb1] = std::tuple{  upleft_corner[0], 
+                                                upleft_corner[1], 
+                                                upleft_corner[2] };
+        const auto [cr2,cg2,cb2] = std::tuple{  upleft_corner[0+3*(square_length-1)], 
+                                                upleft_corner[1+3*(square_length-1)], 
+                                                upleft_corner[2+3*(square_length-1)] };
+        const auto [cr3,cg3,cb3] = std::tuple{  upleft_corner[0+3*(square_length-1)*square_line_offset], 
+                                                upleft_corner[1+3*(square_length-1)*square_line_offset], 
+                                                upleft_corner[2+3*(square_length-1)*square_line_offset] };
+        const auto [cr4,cg4,cb4] = std::tuple{  upleft_corner[0+3*(square_length-1)*square_line_offset+3*(square_length-1)], 
+                                                upleft_corner[1+3*(square_length-1)*square_line_offset+3*(square_length-1)], 
+                                                upleft_corner[2+3*(square_length-1)*square_line_offset+3*(square_length-1)] };
+
+        auto flag_subnodes = [&]() {
+            upleft_corner[0+3*square_length/2] = -2;
+            upleft_corner[0+3*(square_length/2)*square_line_offset] = -2;
+            upleft_corner[0+3*(square_length/2)*square_line_offset+3*square_length] = -2;
+            upleft_corner[0+3*square_length*square_line_offset+3*(square_length/2)] = -2;
+            upleft_corner[0+3*(square_length/2)*square_line_offset+3*(square_length/2)] = -2;
+            return true;
+        };
+
+        const auto distance1 = (cr1 - cr2)*(cr1 - cr2) + (cg1 - cg2)*(cg1 - cg2) + (cb1 - cb2)*(cb1 - cb2);
+        //std::cout << "distance1 " << distance1 << std::endl;
+        if( distance1 > subdivide_thresh) return flag_subnodes();
+        const auto distance2 = (cr2 - cr4)*(cr2 - cr4) + (cg2 - cg4)*(cg2 - cg4) + (cb2 - cb4)*(cb2 - cb4);
+        if( distance2 > subdivide_thresh) return flag_subnodes();
+        const auto distance3 = (cr4 - cr3)*(cr4 - cr3) + (cg4 - cg3)*(cg4 - cg3) + (cb4 - cb3)*(cb4 - cb3);
+        if( distance3 > subdivide_thresh) return flag_subnodes();
+        const auto distance4 = (cr3 - cr1)*(cr3 - cr1) + (cg3 - cg1)*(cg3 - cg1) + (cb3 - cb1)*(cb3 - cb1);
+        if( distance4 > subdivide_thresh) return flag_subnodes();
+
+        return false;
+    }
+
+    int _run_adaptive(std::uint8_t* output_image)
+    {
+        int progress = 0;
+
+        std::array<int,image_width*image_height*color_channels> work_image{-1};
+
+        const auto start = std::chrono::steady_clock::now();
+        
+        for (int j = 0; j < image_height; j+=8) {
+            progress = j*100/image_height;
+            std::cout << "Computing done @" << progress << "%\r" << std::flush;
+            int offset = color_channels*j*image_width;
+            for (int i = 0; i < image_width; i+=8) {
+                write_color<int>(work_image.data()+offset, _stochastic_sample(i,j), samples_per_pixel);
+                offset += 8*color_channels;
+            }
+        }
+
+        std::cout << "STEP1 : 8px finished" << std::endl;
+
+        progress = 0;
+
+        for (int j = 0; j < image_height-8; j+=4) {
+            progress = j*100/image_height;
+            std::cout << "Computing done @" << progress << "%\r" << std::flush;
+            std::ptrdiff_t offset = color_channels*j*image_width;
+            for (int i = 0; i < image_width-8; i+=4) {
+                const auto upleft_corner = work_image.data()+offset;
+                if(upleft_corner[0] >= 0) // computed 8px node
+                {
+                    _compute_corners_heuristic(upleft_corner,8,image_width);
+                }
+                if(upleft_corner[0] == -2) // 4px node flagged
+                {
+                    write_color<int>(work_image.data()+offset, _stochastic_sample(i,j), samples_per_pixel);
+                }
+                offset += 4*color_channels;
+            }
+        }
+
+        std::cout << "STEP2 : 4px finished" << std::endl;
+
+        progress = 0;
+
+        for (int j = 0; j < image_height-8; j+=2) {
+            progress = j*100/image_height;
+            std::cout << "Computing done @" << progress << "%\r" << std::flush;
+            std::ptrdiff_t offset = color_channels*j*image_width;
+            for (int i = 0; i < image_width-8; i+=2) {
+                const auto upleft_corner = work_image.data()+offset;
+                if(upleft_corner[0] >= 0) // computed 4px node
+                {
+                    _compute_corners_heuristic(upleft_corner,4,image_width);
+                }
+                if(upleft_corner[0] == -2) // 2px node flagged
+                {
+                    write_color<int>(work_image.data()+offset, _stochastic_sample(i,j), samples_per_pixel);
+                }
+                offset += 2*color_channels;
+            }
+        }
+
+        std::cout << "STEP3 : 2px finished" << std::endl;
+
+        progress = 0;
+
+        for (int j = 0; j < image_height-8; ++j) {
+            progress = j*100/image_height;
+            std::cout << "Computing done @" << progress << "%\r" << std::flush;
+            std::ptrdiff_t offset = color_channels*j*image_width;
+            for (int i = 0; i < image_width-8; ++i) {
+                const auto upleft_corner = work_image.data()+offset;
+                if(upleft_corner[0] >= 0) // computed 2px node
+                {
+                    _compute_corners_heuristic(upleft_corner,2,image_width);
+                }
+                if(upleft_corner[0] == -2) // 1px node flagged
+                {
+                    write_color<int>(work_image.data()+offset, _stochastic_sample(i,j), samples_per_pixel);
+                }
+                offset += color_channels;
+            }
+        }
+
+        std::cout << "STEP4 : 1px finished" << std::endl;
+
+        std::transform(work_image.cbegin(), work_image.cend(), output_image, 
+            [](const int& val){ return static_cast<std::uint8_t>(val); });
 
         const auto end = std::chrono::steady_clock::now();
         const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -81,15 +222,8 @@ private:
         auto run_stripe = [&](int j0, int j1) {
             for (int j = j0; j < j1; ++j) {
                 int offset = color_channels*j*image_width;
-                for (size_t i = 0; i < image_width; ++i) {
-                    color pixel_color(0, 0, 0);
-                    for (int s = 0; s < samples_per_pixel; ++s) {
-                        auto u = (i + random_double()) / (image_width-1);
-                        auto v = ((image_height-1-j) + random_double()) / (image_height-1); // spatial convention, not image convention!
-                        ray r = cam.get_ray(u, v);
-                        pixel_color += _ray_color(r, background, world, max_depth);
-                    }
-                    write_color(output_image+offset, pixel_color, samples_per_pixel);
+                for (int i = 0; i < image_width; ++i) {
+                    write_color(output_image+offset, _stochastic_sample(i,j), samples_per_pixel);
                     offset += color_channels;
                 }
                 progress++;
@@ -132,13 +266,7 @@ private:
             for (int j = 0; j < image_height; ++j) {
                 int offset = color_channels*j*image_width;
                 for (int i = 0; i < image_width; ++i) {
-                    color pixel_color(0, 0, 0);
-                    for (int s = 0; s < small_samples_per_pixel; ++s) {
-                        auto u = (i + random_double()) / (image_width-1);
-                        auto v = ((image_height-1-j) + random_double()) / (image_height-1); // spatial convention, not image convention!
-                        ray r = cam.get_ray(u, v);
-                        pixel_color += _ray_color(r, background, world, max_depth);
-                    }
+                    const color pixel_color = _stochastic_sample(i,j,small_samples_per_pixel);
                     auto* out = partial_image+offset;
                     out[0] = static_cast<float>(pixel_color[0]);
                     out[1] = static_cast<float>(pixel_color[1]);
