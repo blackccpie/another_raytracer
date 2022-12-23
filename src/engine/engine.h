@@ -235,41 +235,58 @@ private:
             progress = j*100/image_height;
             std::cout << "Interpolation done @" << progress << "%\r" << std::flush;
             std::ptrdiff_t offset = color_channels*j*image_width;
-            int x1 = 0, x2 = 0, y1 = 0, y2 = 0;
             for (int i = 0; i < image_width-8; ++i) {
                 const auto pixel = work_image.data()+offset;
                 if(pixel[0] == -128)
                 {
                     int square_length;
+
                     // compute interpolation square length
                     for(square_length=1; square_length<=8; ++square_length)
                     {
                         if(pixel[color_channels*square_length] >= 0)
                             break;
                     }
-                    x1 = i-1;
-                    x2 = i+square_length;
-                    y1 = j;
-                    y2 = j+square_length;
-                    // compute interpolated color
-                    const color interp_color = _interpolate(
-                        i, j, 
-                        x1, x2, y1, y2,
-                        to_color_func(work_image.data()+color_channels*x1+color_channels*y1*image_width),
-                        to_color_func(work_image.data()+color_channels*x1+color_channels*y2*image_width),
-                        to_color_func(work_image.data()+color_channels*x2+color_channels*y1*image_width),
-                        to_color_func(work_image.data()+color_channels*x2+color_channels*y2*image_width)
-                    );
-                    // write pixel
-                    write_color(pixel, interp_color, 1);
-                }
-                else
-                {
+                    square_length++;
 
+                    const auto x1 = i-1;
+                    const auto x2 = i+square_length;
+                    const auto y1 = j;
+                    const auto y2 = j+square_length;
+                    const auto color1 = to_color_func(work_image.data()+color_channels*x1+color_channels*y1*image_width);
+                    const auto color2 = to_color_func(work_image.data()+color_channels*x1+color_channels*y2*image_width);
+                    const auto color3 = to_color_func(work_image.data()+color_channels*x2+color_channels*y1*image_width);
+                    const auto color4 = to_color_func(work_image.data()+color_channels*x2+color_channels*y2*image_width);
+                    for(int m=0; m<square_length; ++m)
+                    {
+                        for(int n=-1; n<square_length-1; ++n)
+                        {
+                            const std::ptrdiff_t interp_offset = color_channels*n + color_channels*m*image_width;
+                            const auto pixel_interp = pixel+interp_offset;
+                            if(pixel_interp[0] != -128) // don't overwrite upleft corner
+                                continue;
+
+                            // compute interpolated colors
+                            const color interp_color = _interpolate(
+                                i+n, j+m,
+                                x1, x2, y1, y2,
+                                color1,
+                                color2,
+                                color3,
+                                color4
+                            );
+                            // write pixel
+                            write_color(pixel_interp, color(1,0,0)/*interp_color*/, 1);
+                        }
+                    }
+                    break;  // remove!!!
                 }
                 offset += color_channels;
             }
+            break; // rempve!!!
         }
+
+        std::cout << "STEP5 : interpolation finished" << std::endl;
 
         std::transform(work_image.cbegin(), work_image.cend(), output_image, 
             [](const int& val){ return static_cast<std::uint8_t>(val); });
