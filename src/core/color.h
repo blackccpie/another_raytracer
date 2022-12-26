@@ -4,7 +4,7 @@
 #include "vec3.h"
 
 template<typename T = std::uint8_t>
-void write_color(T* out, color pixel_color, int samples_per_pixel) {
+inline void write_color(T* out, color pixel_color, int samples_per_pixel) {
     auto r = pixel_color.x();
     auto g = pixel_color.y();
     auto b = pixel_color.z();
@@ -19,6 +19,14 @@ void write_color(T* out, color pixel_color, int samples_per_pixel) {
     out[0] = static_cast<T>(256 * clamp(r, 0.0, 0.999));
     out[1] = static_cast<T>(256 * clamp(g, 0.0, 0.999));
     out[2] = static_cast<T>(256 * clamp(b, 0.0, 0.999));
+}
+
+template<typename T = std::uint8_t>
+inline void write_color_raw(T* out, color pixel_color)
+{
+    out[0] = static_cast<T>(pixel_color.x());
+    out[1] = static_cast<T>(pixel_color.y());
+    out[2] = static_cast<T>(pixel_color.z());
 }
 
 #endif
