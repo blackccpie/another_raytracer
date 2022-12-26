@@ -87,36 +87,24 @@ private:
         const auto [cr1,cg1,cb1] = std::tuple{  upleft_corner[0], 
                                                 upleft_corner[1], 
                                                 upleft_corner[2] };
-        const auto [cr2,cg2,cb2] = std::tuple{  upleft_corner[0+color_channels*square_length], 
-                                                upleft_corner[1+color_channels*square_length], 
-                                                upleft_corner[2+color_channels*square_length] };
-        if(cr2 == -128) return false;
-        const auto [cr3,cg3,cb3] = std::tuple{  upleft_corner[0+color_channels*square_length*square_line_offset], 
-                                                upleft_corner[1+color_channels*square_length*square_line_offset], 
-                                                upleft_corner[2+color_channels*square_length*square_line_offset] };
-        if(cr3 == -128) return false;
-        const auto [cr4,cg4,cb4] = std::tuple{  upleft_corner[0+color_channels*square_length*square_line_offset+color_channels*square_length], 
-                                                upleft_corner[1+color_channels*square_length*square_line_offset+color_channels*square_length], 
-                                                upleft_corner[2+color_channels*square_length*square_line_offset+color_channels*square_length] };
-        if(cr4 == -128) return false;
-
-        auto flag_subnodes = [&]() {
-            upleft_corner[0+color_channels*square_length/2] = -2;
-            upleft_corner[0+color_channels*(square_length/2)*square_line_offset] = -2;
-            upleft_corner[0+color_channels*(square_length/2)*square_line_offset+color_channels*square_length] = -2;
-            upleft_corner[0+color_channels*square_length*square_line_offset+color_channels*(square_length/2)] = -2;
-            upleft_corner[0+color_channels*(square_length/2)*square_line_offset+color_channels*(square_length/2)] = -2;
-            return true;
-        };
+        const auto [cr2,cg2,cb2] = std::tuple{  upleft_corner[0+color_channels*(square_length-1)], 
+                                                upleft_corner[1+color_channels*(square_length-1)], 
+                                                upleft_corner[2+color_channels*(square_length-1)] };
+        const auto [cr3,cg3,cb3] = std::tuple{  upleft_corner[0+color_channels*(square_length-1)*square_line_offset], 
+                                                upleft_corner[1+color_channels*(square_length-1)*square_line_offset], 
+                                                upleft_corner[2+color_channels*(square_length-1)*square_line_offset] };
+        const auto [cr4,cg4,cb4] = std::tuple{  upleft_corner[0+color_channels*(square_length-1)*square_line_offset+color_channels*(square_length-1)], 
+                                                upleft_corner[1+color_channels*(square_length-1)*square_line_offset+color_channels*(square_length-1)], 
+                                                upleft_corner[2+color_channels*(square_length-1)*square_line_offset+color_channels*(square_length-1)] }; 
 
         const auto distance1 = (cr1 - cr2)*(cr1 - cr2) + (cg1 - cg2)*(cg1 - cg2) + (cb1 - cb2)*(cb1 - cb2);
-        if( distance1 > subdivide_thresh) return flag_subnodes();
+        if( distance1 > subdivide_thresh) return true;
         const auto distance2 = (cr2 - cr4)*(cr2 - cr4) + (cg2 - cg4)*(cg2 - cg4) + (cb2 - cb4)*(cb2 - cb4);
-        if( distance2 > subdivide_thresh) return flag_subnodes();
+        if( distance2 > subdivide_thresh) return true;
         const auto distance3 = (cr4 - cr3)*(cr4 - cr3) + (cg4 - cg3)*(cg4 - cg3) + (cb4 - cb3)*(cb4 - cb3);
-        if( distance3 > subdivide_thresh) return flag_subnodes();
+        if( distance3 > subdivide_thresh) return true;
         const auto distance4 = (cr3 - cr1)*(cr3 - cr1) + (cg3 - cg1)*(cg3 - cg1) + (cb3 - cb1)*(cb3 - cb1);
-        if( distance4 > subdivide_thresh) return flag_subnodes();
+        if( distance4 > subdivide_thresh) return true;
 
         return false;
     }
@@ -137,99 +125,6 @@ private:
     {
         int progress = 0;
 
-        std::array<int,image_width*image_height*color_channels> work_image;
-        work_image.fill(-128);
-        
-        const auto start = std::chrono::steady_clock::now();
-        
-        for (int j = 0; j < image_height; j+=8) {
-            progress = j*100/image_height;
-            std::cout << "Computing done @" << progress << "%\r" << std::flush;
-            int offset = color_channels*j*image_width;
-            for (int i = 0; i < image_width; i+=8) {
-                write_color<int>(work_image.data()+offset, _stochastic_sample(i,j), samples_per_pixel);
-                offset += 8*color_channels;
-            }
-        }
-
-        std::cout << "STEP1 : 8px finished" << std::endl;
-
-        progress = 0;
-
-        for (int j = 0; j < image_height-8; j+=4) {
-            progress = j*100/image_height;
-            std::cout << "Computing done @" << progress << "%\r" << std::flush;
-            std::ptrdiff_t offset = color_channels*j*image_width;
-            for (int i = 0; i < image_width-8; i+=4) {
-                const auto upleft_corner = work_image.data()+offset;
-                if(upleft_corner[0] >= 0) // computed 8px node
-                {
-                    _compute_corners_heuristic(upleft_corner,8,image_width);
-                }
-                if(upleft_corner[0] == -2) // 4px node flagged
-                {
-                    write_color<int>(work_image.data()+offset, _stochastic_sample(i,j), samples_per_pixel);
-                }
-                offset += 4*color_channels;
-            }
-        }
-
-        std::cout << "STEP2 : 4px finished" << std::endl;
-
-        progress = 0;
-
-        for (int j = 0; j < image_height-8; j+=2) {
-            progress = j*100/image_height;
-            std::cout << "Computing done @" << progress << "%\r" << std::flush;
-            std::ptrdiff_t offset = color_channels*j*image_width;
-            for (int i = 0; i < image_width-8; i+=2) {
-                const auto upleft_corner = work_image.data()+offset;
-                if(upleft_corner[0] >= 0) // computed 4px node
-                {
-                    _compute_corners_heuristic(upleft_corner,4,image_width);
-                }
-                if(upleft_corner[0] == -2) // 2px node flagged
-                {
-                    write_color<int>(work_image.data()+offset, _stochastic_sample(i,j), samples_per_pixel);
-                }
-                offset += 2*color_channels;
-            }
-        }
-
-        std::cout << "STEP3 : 2px finished" << std::endl;
-
-        //std::transform(work_image.cbegin(), work_image.cend(), output_image, 
-        //    [](const int& val){ return static_cast<std::uint8_t>(val); });
-        //return 0;
-
-        progress = 0;
-
-        for (int j = 0; j < image_height-8; ++j) {
-            progress = j*100/image_height;
-            std::cout << "Computing done @" << progress << "%\r" << std::flush;
-            std::ptrdiff_t offset = color_channels*j*image_width;
-            for (int i = 0; i < image_width-8; ++i) {
-                const auto upleft_corner = work_image.data()+offset;
-                if(upleft_corner[0] >= 0) // computed 2px node
-                {
-                    _compute_corners_heuristic(upleft_corner,2,image_width);
-                }
-                if(upleft_corner[0] == -2) // 1px node flagged
-                {
-                    write_color<int>(work_image.data()+offset, _stochastic_sample(i,j), samples_per_pixel);
-                }
-                offset += color_channels;
-            }
-        }
-
-        std::cout << "STEP4 : 1px finished" << std::endl;
-
-        //std::transform(work_image.cbegin(), work_image.cend(), output_image, 
-        //    [](const int& val){ return static_cast<std::uint8_t>(val); });
-        //return 0;
-
-        progress = 0;
-
         // TODO-AM : could be used elsewhere
         auto to_color_func = []<typename T>(T* data) { 
             return color{ 
@@ -239,48 +134,180 @@ private:
             };
         };
 
-        for (int j = 0; j < image_height-8; ++j) {
+        std::array<int,image_width*image_height*color_channels> work_image;
+        work_image.fill(-128);
+
+        const auto start = std::chrono::steady_clock::now();
+
+        constexpr int big_square_size = 12;
+        constexpr int mid_square_size = big_square_size/2;
+        constexpr int small_square_size = mid_square_size/2;
+        static_assert(big_square_size % 3 == 0 && big_square_size % 2 == 0);// must be even and a multiple of 3!!
+
+        // TODO-AM : could be used elsewhere
+        auto rgb_accessor = [&]<typename T>(T* data,int i, int j) -> T* { 
+            return data+i*color_channels+j*color_channels*image_width;
+        };
+
+        for (int j = 0; j < image_height-big_square_size; j+=big_square_size) {
             progress = j*100/image_height;
-            std::cout << "Interpolation done @" << progress << "%\r" << std::flush;
-            std::ptrdiff_t offset = color_channels*j*image_width;
-            for (int i = 0; i < image_width-8; ++i) {
-                const auto pixel = work_image.data()+offset;
-                if(pixel[0] == -128)
+            std::cout << "Computing done @" << progress << "%\r" << std::flush;
+            for (int i = 0; i < image_width-big_square_size; i+=big_square_size) {
+
+                const auto pixel_upleft = rgb_accessor(work_image.data(),i,j);
+                const auto pixel_upright = rgb_accessor(work_image.data(),i+big_square_size-1,j);
+                const auto pixel_bottomleft = rgb_accessor(work_image.data(),i,j+big_square_size-1);
+                const auto pixel_bottomright = rgb_accessor(work_image.data(),i+big_square_size-1,j+big_square_size-1);
+                write_color<int>(pixel_upleft, _stochastic_sample(i,j), samples_per_pixel);
+                write_color<int>(pixel_upright, _stochastic_sample(i+big_square_size-1,j), samples_per_pixel);
+                write_color<int>(pixel_bottomleft, _stochastic_sample(i,j+big_square_size-1), samples_per_pixel);
+                write_color<int>(pixel_bottomright, _stochastic_sample(i+big_square_size-1,j+big_square_size-1), samples_per_pixel);
+
+                // do we need smaller resolution
+                bool need_subsampling = _compute_corners_heuristic(pixel_upleft,big_square_size,image_width);
+
+                if(need_subsampling) 
                 {
-                    int square_length;
+                    for(int l=j; l<j+big_square_size; l+= mid_square_size) {
+                        for(int k=i; k<i+big_square_size; k+=mid_square_size) {
+                            const auto pixel_upleft2 = rgb_accessor(work_image.data(),k,l);
+                            const auto pixel_upright2 = rgb_accessor(work_image.data(),k+mid_square_size-1,l);
+                            const auto pixel_bottomleft2 = rgb_accessor(work_image.data(),k,l+mid_square_size-1);
+                            const auto pixel_bottomright2 = rgb_accessor(work_image.data(),k+mid_square_size-1,l+mid_square_size-1);
+                            write_color<int>(pixel_upleft2, _stochastic_sample(k,l), samples_per_pixel);
+                            write_color<int>(pixel_upright2, _stochastic_sample(k+mid_square_size-1,l), samples_per_pixel);
+                            write_color<int>(pixel_bottomleft2, _stochastic_sample(k,l+mid_square_size-1), samples_per_pixel);
+                            write_color<int>(pixel_bottomright2, _stochastic_sample(k+mid_square_size-1,l+mid_square_size-1), samples_per_pixel);
 
-                    // compute interpolation square length
-                    for(square_length=1; square_length<=8; ++square_length)
-                    {
-                        const auto pixel_bottomright_r = pixel[color_channels*(square_length-1)+color_channels*square_length*image_width];
-                        const auto pixel_bottomleft_r = pixel[color_channels*square_length*image_width];
-                        if(pixel[color_channels*square_length] >= 0 && pixel_bottomright_r == -128 && pixel_bottomleft_r ==-128)
-                            break;
+                            // do we need smaller resolution
+                            bool need_subsampling2 = _compute_corners_heuristic(pixel_upleft2,mid_square_size,image_width);
+
+                            if(need_subsampling2)
+                            {
+                                for(int n=l; n<l+mid_square_size; n+=small_square_size) {
+                                    for(int m=k; m<k+mid_square_size; m+=small_square_size) {
+                                        const auto pixel_upleft3 = rgb_accessor(work_image.data(),m,n);
+                                        const auto pixel_upright3 = rgb_accessor(work_image.data(),m+small_square_size-1,n);
+                                        const auto pixel_bottomleft3 = rgb_accessor(work_image.data(),m,n+small_square_size-1);
+                                        const auto pixel_bottomright3 = rgb_accessor(work_image.data(),m+small_square_size-1,n+small_square_size-1);
+                                        write_color<int>(pixel_upleft3, _stochastic_sample(m,n), samples_per_pixel);
+                                        write_color<int>(pixel_upright3, _stochastic_sample(m+small_square_size-1,n), samples_per_pixel);
+                                        write_color<int>(pixel_bottomleft3, _stochastic_sample(m,n+small_square_size-1), samples_per_pixel);
+                                        write_color<int>(pixel_bottomright3, _stochastic_sample(m+small_square_size-1,n+small_square_size-1), samples_per_pixel);
+
+                                        // do we need smallest resolution -> 3px
+                                        bool need_subsampling3 = _compute_corners_heuristic(pixel_upleft3,small_square_size,image_width);
+
+                                        if(need_subsampling3) 
+                                        {
+                                            const auto pixel1 = rgb_accessor(work_image.data(),m+1,n);
+                                            const auto pixel2 = rgb_accessor(work_image.data(),m,n+1);
+                                            const auto pixel3 = rgb_accessor(work_image.data(),m+1,n+1);
+                                            const auto pixel4 = rgb_accessor(work_image.data(),m+2,n+1);
+                                            const auto pixel5 = rgb_accessor(work_image.data(),m+1,n+2);
+                                            write_color<int>(pixel1, _stochastic_sample(m+1,n), samples_per_pixel);
+                                            write_color<int>(pixel2, _stochastic_sample(m,n+1), samples_per_pixel);
+                                            write_color<int>(pixel3, _stochastic_sample(m+1,n+1), samples_per_pixel);
+                                            write_color<int>(pixel4, _stochastic_sample(m+2,n+1), samples_per_pixel);
+                                            write_color<int>(pixel5, _stochastic_sample(m+1,n+2), samples_per_pixel);
+                                        }
+                                        else // interpolate smallest square
+                                        {
+                                            const auto x1 = m;
+                                            const auto x2 = m+small_square_size-1;
+                                            const auto y1 = n;
+                                            const auto y2 = n+small_square_size-1;
+                                            const auto color1 = to_color_func(work_image.data()+color_channels*x1+color_channels*y1*image_width);
+                                            const auto color2 = to_color_func(work_image.data()+color_channels*x1+color_channels*y2*image_width);
+                                            const auto color3 = to_color_func(work_image.data()+color_channels*x2+color_channels*y1*image_width);
+                                            const auto color4 = to_color_func(work_image.data()+color_channels*x2+color_channels*y2*image_width);
+
+                                            for(int q=0; q<small_square_size; ++q)
+                                            {
+                                                for(int p=0; p<small_square_size; ++p)
+                                                {
+                                                    const std::ptrdiff_t interp_offset = color_channels*p+color_channels*q*image_width;
+                                                    const auto pixel_interp = pixel_upleft3+interp_offset;
+                                                    if(pixel_interp[0] >= 0) // don't overwrite updated pixel
+                                                        continue;
+
+                                                    // compute interpolated colors
+                                                    const color interp_color = _interpolate(
+                                                        m+p, n+q,
+                                                        x1, x2, y1, y2,
+                                                        color1,
+                                                        color2,
+                                                        color3,
+                                                        color4
+                                                    );
+                                                    // write pixel
+                                                    write_color_raw(pixel_interp, interp_color); // NOTE: don't apply gamma correction here!
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else // interpolate mid square
+                            { 
+                                const auto x1 = k;
+                                const auto x2 = k+mid_square_size-1;
+                                const auto y1 = l;
+                                const auto y2 = l+mid_square_size-1;
+                                const auto color1 = to_color_func(work_image.data()+color_channels*x1+color_channels*y1*image_width);
+                                const auto color2 = to_color_func(work_image.data()+color_channels*x1+color_channels*y2*image_width);
+                                const auto color3 = to_color_func(work_image.data()+color_channels*x2+color_channels*y1*image_width);
+                                const auto color4 = to_color_func(work_image.data()+color_channels*x2+color_channels*y2*image_width);
+
+                                for(int n=0; n<mid_square_size; ++n)
+                                {
+                                    for(int m=0; m<mid_square_size; ++m)
+                                    {
+                                        const std::ptrdiff_t interp_offset = color_channels*m+color_channels*n*image_width;
+                                        const auto pixel_interp = pixel_upleft2+interp_offset;
+                                        if(pixel_interp[0] >= 0) // don't overwrite updated pixel
+                                            continue;
+
+                                        // compute interpolated colors
+                                        const color interp_color = _interpolate(
+                                            k+m, l+n,
+                                            x1, x2, y1, y2,
+                                            color1,
+                                            color2,
+                                            color3,
+                                            color4
+                                        );
+                                        // write pixel
+                                        write_color_raw(pixel_interp, interp_color); // NOTE: don't apply gamma correction here!
+                                    }
+                                }
+                            }
+                        }
                     }
-                    square_length++;
-
-                    const auto x1 = i-1;
-                    const auto x2 = i+square_length-1;
+                }
+                else // interpolate big square
+                {
+                    const auto x1 = i;
+                    const auto x2 = i+big_square_size-1;
                     const auto y1 = j;
-                    const auto y2 = j+square_length;
+                    const auto y2 = j+big_square_size-1;
                     const auto color1 = to_color_func(work_image.data()+color_channels*x1+color_channels*y1*image_width);
                     const auto color2 = to_color_func(work_image.data()+color_channels*x1+color_channels*y2*image_width);
                     const auto color3 = to_color_func(work_image.data()+color_channels*x2+color_channels*y1*image_width);
                     const auto color4 = to_color_func(work_image.data()+color_channels*x2+color_channels*y2*image_width);
-                    
-                    // not an isolated pixel, interpolate the square
-                    for(int m=0; m<square_length; ++m)
+
+                    for(int l=0; l<big_square_size; ++l)
                     {
-                        for(int n=-1; n<square_length-1; ++n)
+                        for(int k=0; k<big_square_size; ++k)
                         {
-                            const std::ptrdiff_t interp_offset = color_channels*n + color_channels*m*image_width;
-                            const auto pixel_interp = pixel+interp_offset;
-                            if(pixel_interp[0] != -128) // don't overwrite upleft corner
+                            const std::ptrdiff_t interp_offset = color_channels*k+color_channels*l*image_width;
+                            const auto pixel_interp = pixel_upleft+interp_offset;
+                            if(pixel_interp[0] >= 0) // don't overwrite updated pixel
                                 continue;
 
                             // compute interpolated colors
                             const color interp_color = _interpolate(
-                                i+n, j+m,
+                                i+k, j+l,
                                 x1, x2, y1, y2,
                                 color1,
                                 color2,
@@ -292,11 +319,8 @@ private:
                         }
                     }
                 }
-                offset += color_channels;
             }
         }
-
-        std::cout << "STEP5 : interpolation finished" << std::endl;
 
         std::transform(work_image.cbegin(), work_image.cend(), output_image, 
             [](const int& val){ return static_cast<std::uint8_t>(val); });
