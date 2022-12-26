@@ -130,7 +130,7 @@ private:
         const color R2 = (x2 - x)*Q12/xdiff +  (x-x1)*Q22/xdiff; // TODO-AM : could be precomputed
 
         const auto ydiff = y2-y1;
-        return (y2-y1)*R1/ydiff + (y-y1)*R2/ydiff;
+        return (y2-y)*R1/ydiff + (y-y1)*R2/ydiff;
     }
 
     int _run_adaptive(std::uint8_t* output_image)
@@ -198,6 +198,10 @@ private:
 
         std::cout << "STEP3 : 2px finished" << std::endl;
 
+        //std::transform(work_image.cbegin(), work_image.cend(), output_image, 
+        //    [](const int& val){ return static_cast<std::uint8_t>(val); });
+        //return 0;
+
         progress = 0;
 
         for (int j = 0; j < image_height-8; ++j) {
@@ -219,6 +223,10 @@ private:
         }
 
         std::cout << "STEP4 : 1px finished" << std::endl;
+
+        //std::transform(work_image.cbegin(), work_image.cend(), output_image, 
+        //    [](const int& val){ return static_cast<std::uint8_t>(val); });
+        //return 0;
 
         progress = 0;
 
@@ -244,19 +252,23 @@ private:
                     // compute interpolation square length
                     for(square_length=1; square_length<=8; ++square_length)
                     {
-                        if(pixel[color_channels*square_length] >= 0)
+                        const auto pixel_bottomright_r = pixel[color_channels*(square_length-1)+color_channels*square_length*image_width];
+                        const auto pixel_bottomleft_r = pixel[color_channels*square_length*image_width];
+                        if(pixel[color_channels*square_length] >= 0 && pixel_bottomright_r == -128 && pixel_bottomleft_r ==-128)
                             break;
                     }
                     square_length++;
 
                     const auto x1 = i-1;
-                    const auto x2 = i+square_length;
+                    const auto x2 = i+square_length-1;
                     const auto y1 = j;
                     const auto y2 = j+square_length;
                     const auto color1 = to_color_func(work_image.data()+color_channels*x1+color_channels*y1*image_width);
                     const auto color2 = to_color_func(work_image.data()+color_channels*x1+color_channels*y2*image_width);
                     const auto color3 = to_color_func(work_image.data()+color_channels*x2+color_channels*y1*image_width);
                     const auto color4 = to_color_func(work_image.data()+color_channels*x2+color_channels*y2*image_width);
+                    
+                    // not an isolated pixel, interpolate the square
                     for(int m=0; m<square_length; ++m)
                     {
                         for(int n=-1; n<square_length-1; ++n)
@@ -276,14 +288,12 @@ private:
                                 color4
                             );
                             // write pixel
-                            write_color(pixel_interp, color(1,0,0)/*interp_color*/, 1);
+                            write_color_raw(pixel_interp, interp_color); // NOTE: don't apply gamma correction here!
                         }
                     }
-                    break;  // remove!!!
                 }
                 offset += color_channels;
             }
-            break; // rempve!!!
         }
 
         std::cout << "STEP5 : interpolation finished" << std::endl;
@@ -351,9 +361,7 @@ private:
                 for (int i = 0; i < image_width; ++i) {
                     const color pixel_color = _stochastic_sample(i,j,small_samples_per_pixel);
                     auto* out = partial_image+offset;
-                    out[0] = static_cast<float>(pixel_color[0]); // NOTE: don't apply gamma correction here!
-                    out[1] = static_cast<float>(pixel_color[1]);
-                    out[2] = static_cast<float>(pixel_color[2]);
+                    write_color_raw<float>(out,pixel_color); // NOTE: don't apply gamma correction here!
                     offset += color_channels;
                 }
                 progress++;
