@@ -46,7 +46,7 @@ public:
     }
     
 private:
-    
+
     inline color _stochastic_sample(int i, int j, int _samples_per_pixel = samples_per_pixel)
     {
         color pixel_color(0, 0, 0);
@@ -84,18 +84,18 @@ private:
     {
         constexpr int subdivide_thresh = 100;
 
-        const auto [cr1,cg1,cb1] = std::tuple{  upleft_corner[0], 
-                                                upleft_corner[1], 
-                                                upleft_corner[2] };
-        const auto [cr2,cg2,cb2] = std::tuple{  upleft_corner[0+color_channels*(square_length-1)], 
-                                                upleft_corner[1+color_channels*(square_length-1)], 
-                                                upleft_corner[2+color_channels*(square_length-1)] };
-        const auto [cr3,cg3,cb3] = std::tuple{  upleft_corner[0+color_channels*(square_length-1)*square_line_offset], 
-                                                upleft_corner[1+color_channels*(square_length-1)*square_line_offset], 
-                                                upleft_corner[2+color_channels*(square_length-1)*square_line_offset] };
-        const auto [cr4,cg4,cb4] = std::tuple{  upleft_corner[0+color_channels*(square_length-1)*square_line_offset+color_channels*(square_length-1)], 
-                                                upleft_corner[1+color_channels*(square_length-1)*square_line_offset+color_channels*(square_length-1)], 
-                                                upleft_corner[2+color_channels*(square_length-1)*square_line_offset+color_channels*(square_length-1)] }; 
+        auto rgb_tuple_accessor = [&]<typename T>(T* data,size_t i, size_t j) { 
+            
+            T* pix_start = data+i*color_channels+j*color_channels*image_width;
+            return std::tuple{  pix_start[0], 
+                                pix_start[1], 
+                                pix_start[2] };
+        };
+
+        const auto [cr1,cg1,cb1] = rgb_tuple_accessor(upleft_corner,0,0);
+        const auto [cr2,cg2,cb2] = rgb_tuple_accessor(upleft_corner,square_length-1,0);
+        const auto [cr3,cg3,cb3] = rgb_tuple_accessor(upleft_corner,0,square_length-1);
+        const auto [cr4,cg4,cb4] = rgb_tuple_accessor(upleft_corner,square_length-1,square_length-1);
 
         const auto distance1 = (cr1 - cr2)*(cr1 - cr2) + (cg1 - cg2)*(cg1 - cg2) + (cb1 - cb2)*(cb1 - cb2);
         if( distance1 > subdivide_thresh) return true;
@@ -125,12 +125,16 @@ private:
     {
         int progress = 0;
 
-        // TODO-AM : could be used elsewhere
-        auto to_color_func = []<typename T>(T* data) { 
+        auto rgb_accessor = [&]<typename T>(T* data,int i, int j) -> T* { 
+            return data+i*color_channels+j*color_channels*image_width;
+        };
+
+        auto to_color_func = [&]<typename T>(T* data, int i, int j) { 
+            std::ptrdiff_t offset = i*color_channels+j*color_channels*image_width;
             return color{ 
-                static_cast<double>(data[0]),
-                static_cast<double>(data[1]),
-                static_cast<double>(data[2])
+                static_cast<double>(data[0+offset]),
+                static_cast<double>(data[1+offset]),
+                static_cast<double>(data[2+offset])
             };
         };
 
@@ -144,9 +148,39 @@ private:
         constexpr int small_square_size = mid_square_size/2;
         static_assert(big_square_size % 3 == 0 && big_square_size % 2 == 0);// must be even and a multiple of 3!!
 
-        // TODO-AM : could be used elsewhere
-        auto rgb_accessor = [&]<typename T>(T* data,int i, int j) -> T* { 
-            return data+i*color_channels+j*color_channels*image_width;
+        auto interpolate_square = [&](int* data, int i, int j, int square_size)
+        {
+            const auto pixel_upleft = rgb_accessor(data,i,j);
+            const auto x1 = i;
+            const auto x2 = i+square_size-1;
+            const auto y1 = j;
+            const auto y2 = j+square_size-1;
+            const auto color1 = to_color_func(data,x1,y1);
+            const auto color2 = to_color_func(data,x1,y2);
+            const auto color3 = to_color_func(data,x2,y1);
+            const auto color4 = to_color_func(data,x2,y2);
+
+            for(int l=0; l<square_size; ++l)
+            {
+                for(int k=0; k<square_size; ++k)
+                {
+                    const auto pixel_interp = rgb_accessor(pixel_upleft,k,l);
+                    if(pixel_interp[0] >= 0) // don't overwrite updated pixel
+                        continue;
+
+                    // compute interpolated colors
+                    const color interp_color = _interpolate(
+                        i+k, j+l,
+                        x1, x2, y1, y2,
+                        color1,
+                        color2,
+                        color3,
+                        color4
+                    );
+                    // write pixel
+                    write_color_raw(pixel_interp, interp_color); // NOTE: don't apply gamma correction here!
+                }
+            }
         };
 
         for (int j = 0; j < image_height-big_square_size; j+=big_square_size) {
@@ -213,111 +247,21 @@ private:
                                         }
                                         else // interpolate smallest square
                                         {
-                                            const auto x1 = m;
-                                            const auto x2 = m+small_square_size-1;
-                                            const auto y1 = n;
-                                            const auto y2 = n+small_square_size-1;
-                                            const auto color1 = to_color_func(work_image.data()+color_channels*x1+color_channels*y1*image_width);
-                                            const auto color2 = to_color_func(work_image.data()+color_channels*x1+color_channels*y2*image_width);
-                                            const auto color3 = to_color_func(work_image.data()+color_channels*x2+color_channels*y1*image_width);
-                                            const auto color4 = to_color_func(work_image.data()+color_channels*x2+color_channels*y2*image_width);
-
-                                            for(int q=0; q<small_square_size; ++q)
-                                            {
-                                                for(int p=0; p<small_square_size; ++p)
-                                                {
-                                                    const std::ptrdiff_t interp_offset = color_channels*p+color_channels*q*image_width;
-                                                    const auto pixel_interp = pixel_upleft3+interp_offset;
-                                                    if(pixel_interp[0] >= 0) // don't overwrite updated pixel
-                                                        continue;
-
-                                                    // compute interpolated colors
-                                                    const color interp_color = _interpolate(
-                                                        m+p, n+q,
-                                                        x1, x2, y1, y2,
-                                                        color1,
-                                                        color2,
-                                                        color3,
-                                                        color4
-                                                    );
-                                                    // write pixel
-                                                    write_color_raw(pixel_interp, interp_color); // NOTE: don't apply gamma correction here!
-                                                }
-                                            }
+                                            interpolate_square(work_image.data(),m,n,small_square_size);
                                         }
                                     }
                                 }
                             }
                             else // interpolate mid square
-                            { 
-                                const auto x1 = k;
-                                const auto x2 = k+mid_square_size-1;
-                                const auto y1 = l;
-                                const auto y2 = l+mid_square_size-1;
-                                const auto color1 = to_color_func(work_image.data()+color_channels*x1+color_channels*y1*image_width);
-                                const auto color2 = to_color_func(work_image.data()+color_channels*x1+color_channels*y2*image_width);
-                                const auto color3 = to_color_func(work_image.data()+color_channels*x2+color_channels*y1*image_width);
-                                const auto color4 = to_color_func(work_image.data()+color_channels*x2+color_channels*y2*image_width);
-
-                                for(int n=0; n<mid_square_size; ++n)
-                                {
-                                    for(int m=0; m<mid_square_size; ++m)
-                                    {
-                                        const std::ptrdiff_t interp_offset = color_channels*m+color_channels*n*image_width;
-                                        const auto pixel_interp = pixel_upleft2+interp_offset;
-                                        if(pixel_interp[0] >= 0) // don't overwrite updated pixel
-                                            continue;
-
-                                        // compute interpolated colors
-                                        const color interp_color = _interpolate(
-                                            k+m, l+n,
-                                            x1, x2, y1, y2,
-                                            color1,
-                                            color2,
-                                            color3,
-                                            color4
-                                        );
-                                        // write pixel
-                                        write_color_raw(pixel_interp, interp_color); // NOTE: don't apply gamma correction here!
-                                    }
-                                }
+                            {
+                                interpolate_square(work_image.data(),k,l,mid_square_size);
                             }
                         }
                     }
                 }
                 else // interpolate big square
                 {
-                    const auto x1 = i;
-                    const auto x2 = i+big_square_size-1;
-                    const auto y1 = j;
-                    const auto y2 = j+big_square_size-1;
-                    const auto color1 = to_color_func(work_image.data()+color_channels*x1+color_channels*y1*image_width);
-                    const auto color2 = to_color_func(work_image.data()+color_channels*x1+color_channels*y2*image_width);
-                    const auto color3 = to_color_func(work_image.data()+color_channels*x2+color_channels*y1*image_width);
-                    const auto color4 = to_color_func(work_image.data()+color_channels*x2+color_channels*y2*image_width);
-
-                    for(int l=0; l<big_square_size; ++l)
-                    {
-                        for(int k=0; k<big_square_size; ++k)
-                        {
-                            const std::ptrdiff_t interp_offset = color_channels*k+color_channels*l*image_width;
-                            const auto pixel_interp = pixel_upleft+interp_offset;
-                            if(pixel_interp[0] >= 0) // don't overwrite updated pixel
-                                continue;
-
-                            // compute interpolated colors
-                            const color interp_color = _interpolate(
-                                i+k, j+l,
-                                x1, x2, y1, y2,
-                                color1,
-                                color2,
-                                color3,
-                                color4
-                            );
-                            // write pixel
-                            write_color_raw(pixel_interp, interp_color); // NOTE: don't apply gamma correction here!
-                        }
-                    }
+                    interpolate_square(work_image.data(),i,j,big_square_size);
                 }
             }
         }
