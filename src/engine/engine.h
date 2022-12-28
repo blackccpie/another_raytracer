@@ -80,7 +80,7 @@ private:
         return static_cast<int>(elapsed_ms);
     }
 
-    bool _compute_corners_heuristic(int* upleft_corner, size_t square_length, size_t square_line_offset)
+    bool _compute_corners_heuristic(int* upleft_corner, size_t square_length, size_t square_line_offset/*, int p, int q*/)
     {
         constexpr int subdivide_thresh = 100;
 
@@ -105,6 +105,20 @@ private:
         if( distance3 > subdivide_thresh) return true;
         const auto distance4 = (cr3 - cr1)*(cr3 - cr1) + (cg3 - cg1)*(cg3 - cg1) + (cb3 - cb1)*(cb3 - cb1);
         if( distance4 > subdivide_thresh) return true;
+
+        /*write_color<int>(   upleft_corner+(square_length/2)*color_channels+(square_length/2)*color_channels*image_width, 
+                            _stochastic_sample(p+static_cast<int>(square_length/2),q+static_cast<int>(square_length/2)),
+                            samples_per_pixel);
+
+        const auto [crx,cgx,cbx] = rgb_tuple_accessor(upleft_corner,square_length/2,square_length/2);
+        const auto distancex1 = (cr1 - crx)*(cr1 - crx) + (cg1 - cgx)*(cg1 - cgx) + (cb1 - cbx)*(cb1 - cbx);
+        if( distancex1 > subdivide_thresh) return true;
+        const auto distancex2 = (cr2 - crx)*(cr2 - crx) + (cg2 - cgx)*(cg2 - cgx) + (cb2 - cbx)*(cb2 - cbx);
+        if( distancex2 > subdivide_thresh) return true;
+        const auto distancex3 = (cr3 - cr1)*(cr3 - crx) + (cg3 - cgx)*(cg3 - cgx) + (cb3 - cbx)*(cb3 - cbx);
+        if( distancex3 > subdivide_thresh) return true;
+        const auto distancex4 = (cr4 - cr3)*(cr4 - crx) + (cg4 - cgx)*(cg4 - cgx) + (cb4 - cbx)*(cb4 - cbx);
+        if( distancex4 > subdivide_thresh) return true;*/
 
         return false;
     }
@@ -138,7 +152,7 @@ private:
             };
         };
 
-        std::array<int,image_width*image_height*color_channels> work_image;
+        std::array<int,image_width*image_height*color_channels> work_image; // TODO-AM : int image really needed?
         work_image.fill(-128);
 
         const auto start = std::chrono::steady_clock::now();
@@ -198,7 +212,7 @@ private:
                 write_color<int>(pixel_bottomright, _stochastic_sample(i+big_square_size-1,j+big_square_size-1), samples_per_pixel);
 
                 // do we need smaller resolution
-                bool need_subsampling = _compute_corners_heuristic(pixel_upleft,big_square_size,image_width);
+                bool need_subsampling = _compute_corners_heuristic(pixel_upleft,big_square_size,image_width/*,i,j*/);
 
                 if(need_subsampling) 
                 {
@@ -214,7 +228,7 @@ private:
                             write_color<int>(pixel_bottomright2, _stochastic_sample(k+mid_square_size-1,l+mid_square_size-1), samples_per_pixel);
 
                             // do we need smaller resolution
-                            bool need_subsampling2 = _compute_corners_heuristic(pixel_upleft2,mid_square_size,image_width);
+                            bool need_subsampling2 = _compute_corners_heuristic(pixel_upleft2,mid_square_size,image_width/*,k,l*/);
 
                             if(need_subsampling2)
                             {
@@ -230,7 +244,7 @@ private:
                                         write_color<int>(pixel_bottomright3, _stochastic_sample(m+small_square_size-1,n+small_square_size-1), samples_per_pixel);
 
                                         // do we need smallest resolution -> 3px
-                                        bool need_subsampling3 = _compute_corners_heuristic(pixel_upleft3,small_square_size,image_width);
+                                        bool need_subsampling3 = _compute_corners_heuristic(pixel_upleft3,small_square_size,image_width/*,m,n*/);
 
                                         if(need_subsampling3) 
                                         {
