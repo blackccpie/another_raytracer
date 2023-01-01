@@ -153,14 +153,15 @@ private:
         };
 
         std::array<int,image_width*image_height*color_channels> work_image; // TODO-AM : int image really needed?
-        work_image.fill(-128);
+        work_image.fill(-1);
 
         const auto start = std::chrono::steady_clock::now();
 
         constexpr int big_square_size = 12;
         constexpr int mid_square_size = big_square_size/2;
         constexpr int small_square_size = mid_square_size/2;
-        static_assert(big_square_size % 3 == 0 && big_square_size % 2 == 0);// must be even and a multiple of 3!!
+        static_assert(big_square_size % 3 == 0 && big_square_size % 2 == 0); // must be even and a multiple of 3!!
+        static_assert(image_width % big_square_size == 0 && image_height % big_square_size == 0); // image size should perfectly fit big square size for now!!
 
         auto interpolate_square = [&](int* data, int i, int j, int square_size)
         {
@@ -197,10 +198,10 @@ private:
             }
         };
 
-        for (int j = 0; j < image_height-big_square_size; j+=big_square_size) {
+        for (int j = 0; j < image_height; j+=big_square_size) {
             progress = j*100/image_height;
             std::cout << "Computing done @" << progress << "%\r" << std::flush;
-            for (int i = 0; i < image_width-big_square_size; i+=big_square_size) {
+            for (int i = 0; i < image_width; i+=big_square_size) {
 
                 const auto pixel_upleft = rgb_accessor(work_image.data(),i,j);
                 const auto pixel_upright = rgb_accessor(work_image.data(),i+big_square_size-1,j);

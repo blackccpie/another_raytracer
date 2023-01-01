@@ -8,6 +8,7 @@ const std::string models_path = "@RAYCASTER_ROOT_PATH@/models/";
 const std::string cow_obj_path = models_path + "cow.obj";
 const std::string dino_obj_path = models_path + "dino.obj";
 const std::string capsule_obj_path = models_path + "capsule/capsule.obj";
+//const std::string house_obj_path = models_path + "house/house.obj";
 
 const std::string textures_path = "@RAYCASTER_ROOT_PATH@/textures/";
 
