@@ -16,6 +16,7 @@ void gui::display( const std::uint8_t* img, int w, int h ) {
     CImg<std::uint8_t> image(img,3,static_cast<std::uint32_t>(w),static_cast<std::uint32_t>(h),1,false);
     image.permute_axes("yzcx");
     CImgDisplay main_disp(image,"Raycaster");
+    main_disp.resize(2*w,2*h);
     while (!main_disp.is_closed()) {
         main_disp.wait();
     }

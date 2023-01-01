@@ -3,7 +3,8 @@
 
 #include "vec3.h"
 
-void write_color(std::uint8_t* out, color pixel_color, int samples_per_pixel) {
+template<typename T = std::uint8_t>
+inline void write_color(T* out, color pixel_color, int samples_per_pixel) {
     auto r = pixel_color.x();
     auto g = pixel_color.y();
     auto b = pixel_color.z();
@@ -15,9 +16,17 @@ void write_color(std::uint8_t* out, color pixel_color, int samples_per_pixel) {
     b = sqrt(scale * b);
     
     // Write the translated [0,255] value of each color component.
-    out[0] = static_cast<std::uint8_t>(256 * clamp(r, 0.0, 0.999));
-    out[1] = static_cast<std::uint8_t>(256 * clamp(g, 0.0, 0.999));
-    out[2] = static_cast<std::uint8_t>(256 * clamp(b, 0.0, 0.999));
+    out[0] = static_cast<T>(256 * clamp(r, 0.0, 0.999));
+    out[1] = static_cast<T>(256 * clamp(g, 0.0, 0.999));
+    out[2] = static_cast<T>(256 * clamp(b, 0.0, 0.999));
+}
+
+template<typename T = std::uint8_t>
+inline void write_color_raw(T* out, color pixel_color)
+{
+    out[0] = static_cast<T>(pixel_color.x());
+    out[1] = static_cast<T>(pixel_color.y());
+    out[2] = static_cast<T>(pixel_color.z());
 }
 
 #endif

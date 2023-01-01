@@ -261,8 +261,8 @@ hittable_list mesh_scene() {
 int main(int argc, char **argv) try
 {
     // Image
-    constexpr auto aspect_ratio = 16.0 / 9.0;
-    constexpr int image_width = 640;
+    constexpr auto aspect_ratio = 4.0 / 3.0;
+    constexpr int image_width = 720;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int color_channels = 3;
     int scene_index = 9;
@@ -384,7 +384,7 @@ int main(int argc, char **argv) try
 
     std::array<std::uint8_t,image_width*image_height*color_channels> output_image{0};
 
-    engine<image_width,image_height,color_channels> eng( cam, engine_mode::parallel_images );
+    engine<image_width,image_height,color_channels> eng( cam, engine_mode::adaptive );
     eng.set_scene(world,background);
     auto elapsed_ms = eng.run( output_image.data() );
     
