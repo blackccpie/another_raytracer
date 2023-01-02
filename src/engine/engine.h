@@ -409,14 +409,17 @@ private:
         if (!world.hit(r, 0.001, infinity, rec))
             return background;
         
-        ray scattered;
-        color attenuation;
         color emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+
+        ray scattered;
+        color albedo;
+        double pdf = 0.;
         
-        if (!rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+        if (!rec.mat_ptr->scatter(r, rec, albedo, scattered, pdf))
             return emitted;
         
-        return emitted + attenuation * _ray_color(scattered, background, world, depth-1);
+        return emitted + albedo * rec.mat_ptr->scattering_pdf(r, rec, scattered)
+                                * _ray_color(scattered, background, world, depth-1) / pdf;
     }
     
 private:
