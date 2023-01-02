@@ -1,12 +1,30 @@
 #ifndef MESH_H
 #define MESH_H
 
-//TODO-AM :  remove!
 #include "ressources.h"
-
 #include "triangle.h"
 
 #include "rapidobj.hpp"
+
+class material_map_handler
+{
+public:
+    material_map_handler(const std::string& _work_path) : work_path(_work_path) {}
+    std::shared_ptr<image_texture> get( const std::string& map_name)
+    {
+        if( !material_maps.contains(map_name) )
+        {
+            material_maps.emplace(  map_name,
+                                    std::make_shared<image_texture>(work_path+"/"+map_name));
+            std::cout << "successfully built " << map_name << " texture map" << std::endl;
+            
+        }
+        return material_maps[map_name];
+    }
+private:
+    const std::string work_path;
+    std::map<std::string,std::shared_ptr<image_texture>> material_maps;
+};
 
 class mesh {
     public:
@@ -37,6 +55,9 @@ class mesh {
                 num_triangles += shape.mesh.num_face_vertices.size();
             }
 
+            // extract model work path
+            model_work_path = std::filesystem::path(mesh_path).parent_path().string();
+
             std::cout << "mesh number of shapes:    " << parse_data.shapes.size() << '\n';
             std::cout << "mesh number of triangles: " << num_triangles << '\n';
             
@@ -46,7 +67,11 @@ class mesh {
         hittable_list build() {
             hittable_list triangles;
             
-            auto capsule_texture = std::make_shared<image_texture>(ressources::models_path+"capsule/capsule.jpg"); // TODO-AM : hardcoded!! (remove associated include!)
+            material_map_handler mmh(model_work_path);
+
+            /******************************************************************/
+            /* REFERENCE : https://github.com/guybrush77/rapidobj#data-layout */
+            /******************************************************************/
 
             auto get_vertice_by_index = [this]<typename T>(T index) {
                 const rapidobj::Array<float>& positions = parse_data.attributes.positions;
@@ -77,6 +102,8 @@ class mesh {
                         const auto map_Kd = m.diffuse_texname;
                         if(!map_Kd.empty()) {
                             //std::cout << "material: " << map_Kd << std::endl;
+
+                            auto capsule_texture = mmh.get(map_Kd);
 
                             auto [u1,v1] = get_texcoord_by_index(indices[3*i + 0].texcoord_index);
                             auto [u2,v2] = get_texcoord_by_index(indices[3*i + 1].texcoord_index);
@@ -118,6 +145,7 @@ class mesh {
         }
 
     private:
+        std::string model_work_path;
         rapidobj::Result parse_data;
 };
 
