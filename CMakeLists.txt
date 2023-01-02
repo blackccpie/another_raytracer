@@ -14,6 +14,7 @@ set (sources_list
     src/engine/hittable_list.cpp
     src/primitives/aarect.cpp
     src/primitives/box.cpp
+    src/primitives/bvh.cpp
     src/utils/gui.cpp
     src/utils/imageio.cpp
     src/main.cpp

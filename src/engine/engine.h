@@ -1,6 +1,7 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#include "gui.h"
 #include "material.h"
 #include "hittable_list.h"
 #include "threadpool.h"
@@ -141,6 +142,8 @@ private:
     {
         int progress = 0;
 
+        dynamic_gui dgui(image_width, image_height, 2, "Adaptive");
+
         auto rgb_accessor = [&]<typename T>(T* data,int i, int j) -> T* { 
             return data+i*color_channels+j*color_channels*image_width;
         };
@@ -280,6 +283,9 @@ private:
                 {
                     interpolate_square(work_image.data(),i,j,big_square_size);
                 }
+
+                // manage dynamic progress gui
+                dgui.show(work_image.data());
             }
         }
 

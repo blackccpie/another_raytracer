@@ -8,7 +8,6 @@
 
 class box final : public hittable  {
     public:
-        box() {}
         box(const point3& p0, const point3& p1, std::shared_ptr<material> ptr);
 
         virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const override;

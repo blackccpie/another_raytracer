@@ -134,7 +134,7 @@ int main(int argc, char **argv) try
     camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
     
     // Render
-    std::cout << image_width << " " << image_height << std::endl;
+    std::cout << "output resolution: " << image_width << "x" << image_height << std::endl;
 
     std::array<std::uint8_t,image_width*image_height*color_channels> output_image{0};
 
@@ -149,7 +149,7 @@ int main(int argc, char **argv) try
     
     std::cout << std::endl << "Processing rate: " << ray_processing_rate << "kRay/s" << std::endl;
     
-    gui::display( output_image.data(), image_width, image_height );
+    gui::display( output_image.data(), image_width, image_height, 2 );
     
     imageio::save_image("output.png",image_width,image_height,color_channels,output_image.data());
     

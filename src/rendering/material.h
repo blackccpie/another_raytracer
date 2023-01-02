@@ -19,8 +19,8 @@ class material {
 
 class lambertian final : public material {
     public:
-        lambertian(const color& a) : albedo(std::make_shared<solid_color>(a)) {}
-        lambertian(std::shared_ptr<texture> a) : albedo(a) {}
+        explicit lambertian(const color& a) : albedo(std::make_shared<solid_color>(a)) {}
+        explicit lambertian(std::shared_ptr<texture> a) : albedo(a) {}
 
         virtual bool scatter(
             const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
@@ -44,7 +44,7 @@ class lambertian final : public material {
 
 class metal final : public material {
     public:
-    metal(const color& a, double f) : albedo(a), fuzz(f < 1. ? f : 1.) {}
+        metal(const color& a, double f) : albedo(a), fuzz(f < 1. ? f : 1.) {}
 
         virtual bool scatter(
             const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
@@ -62,7 +62,7 @@ class metal final : public material {
 
 class dielectric final : public material {
     public:
-        dielectric(double index_of_refraction) : ir(index_of_refraction) {}
+        explicit dielectric(double index_of_refraction) : ir(index_of_refraction) {}
 
         virtual bool scatter(
             const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
@@ -100,8 +100,8 @@ class dielectric final : public material {
 
 class diffuse_light final : public material  {
     public:
-        diffuse_light(std::shared_ptr<texture> a) : emit(a) {}
-        diffuse_light(color c) : emit(std::make_shared<solid_color>(c)) {}
+        explicit diffuse_light(std::shared_ptr<texture> a) : emit(a) {}
+        explicit diffuse_light(color c) : emit(std::make_shared<solid_color>(c)) {}
 
         virtual bool scatter(
             const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
@@ -119,8 +119,8 @@ class diffuse_light final : public material  {
 
 class isotropic final : public material {
     public:
-        isotropic(color c) : albedo(std::make_shared<solid_color>(c)) {}
-        isotropic(std::shared_ptr<texture> a) : albedo(a) {}
+        explicit isotropic(color c) : albedo(std::make_shared<solid_color>(c)) {}
+        explicit isotropic(std::shared_ptr<texture> a) : albedo(a) {}
 
         virtual bool scatter(
             const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
