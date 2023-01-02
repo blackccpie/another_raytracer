@@ -6,7 +6,7 @@
 
 class sphere final : public hittable {
     public:
-        sphere(point3 cen, double r, shared_ptr<material> m)
+        sphere(point3 cen, double r, std::shared_ptr<material> m)
             : center(cen), radius(r), mat_ptr(m) {}
 
         virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const override;
@@ -18,7 +18,7 @@ class sphere final : public hittable {
     private:
         point3 center;
         double radius;
-        shared_ptr<material> mat_ptr;
+        std::shared_ptr<material> mat_ptr;
 };
 
 void sphere::get_sphere_uv(const point3& p, double& u, double& v) {
@@ -44,7 +44,7 @@ bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) cons
 
     auto discriminant = half_b*half_b - a*c;
     if (discriminant < 0) return false;
-    auto sqrtd = sqrt(discriminant);
+    auto sqrtd = std::sqrt(discriminant);
 
     // Find the nearest root that lies in the acceptable range.
     auto root = (-half_b - sqrtd) / a;

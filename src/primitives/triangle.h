@@ -6,7 +6,7 @@
 
 class triangle final : public hittable {
     public:
-        triangle(point3 _pt1, point3 _pt2, point3 _pt3, shared_ptr<material> m)
+        triangle(point3 _pt1, point3 _pt2, point3 _pt3, std::shared_ptr<material> m)
             : pt1(_pt1), pt2(_pt2), pt3(_pt3), mat_ptr(m) {}
 
         virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const override;
@@ -16,7 +16,7 @@ class triangle final : public hittable {
         point3 pt1;
         point3 pt2;
         point3 pt3;
-        shared_ptr<material> mat_ptr;
+        std::shared_ptr<material> mat_ptr;
 };
 
 bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {

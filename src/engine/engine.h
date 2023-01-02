@@ -1,6 +1,8 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#include "material.h"
+#include "hittable_list.h"
 #include "threadpool.h"
 
 enum class engine_mode

@@ -9,16 +9,16 @@
 
 class constant_medium final : public hittable {
     public:
-        constant_medium(shared_ptr<hittable> b, double d, shared_ptr<texture> a)
+        constant_medium(std::shared_ptr<hittable> b, double d, std::shared_ptr<texture> a)
             : boundary(b),
               neg_inv_density(-1/d),
-              phase_function(make_shared<isotropic>(a))
+              phase_function(std::make_shared<isotropic>(a))
             {}
 
-        constant_medium(shared_ptr<hittable> b, double d, color c)
+        constant_medium(std::shared_ptr<hittable> b, double d, color c)
             : boundary(b),
               neg_inv_density(-1/d),
-              phase_function(make_shared<isotropic>(c))
+              phase_function(std::make_shared<isotropic>(c))
             {}
 
         virtual bool hit(

@@ -10,11 +10,18 @@ set(RAYCASTER_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 configure_file(src/ressources.h.in ressources.h @ONLY)
 
 set (sources_list
+    src/engine/hittable.cpp
+    src/engine/hittable_list.cpp
+    src/primitives/aarect.cpp
+    src/primitives/box.cpp
     src/utils/gui.cpp
+    src/utils/imageio.cpp
     src/main.cpp
+    src/scene_manager.cpp
 )
 
 set (headers_list
+    src/scene_manager.h
     src/core/color.h
     src/core/ray.h
     src/core/vec3.h

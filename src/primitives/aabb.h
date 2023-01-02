@@ -32,7 +32,7 @@ class aabb {
         point3 maximum;
 };
 
-aabb surrounding_box(aabb box0, aabb box1) {
+inline aabb surrounding_box(aabb box0, aabb box1) {
     point3 small(min(box0.min(),box1.min()));
     point3 big(max(box0.max(),box1.max()));
     return aabb(small,big);

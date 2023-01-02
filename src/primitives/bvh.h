@@ -14,19 +14,19 @@ class bvh_node final : public hittable {
         {}
 
         bvh_node(
-            const std::vector<shared_ptr<hittable>>& src_objects,
+            const std::vector<std::shared_ptr<hittable>>& src_objects,
             size_t start, size_t end, double time0, double time1);
 
         virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const override;
         virtual bool bounding_box(double time0, double time1, aabb& output_box) const override;
 
     public:
-        shared_ptr<hittable> left;
-        shared_ptr<hittable> right;
+        std::shared_ptr<hittable> left;
+        std::shared_ptr<hittable> right;
         aabb box;
 };
 
-inline bool box_compare(const shared_ptr<hittable> a, const shared_ptr<hittable> b, int axis) {
+inline bool box_compare(const std::shared_ptr<hittable> a, const std::shared_ptr<hittable> b, int axis) {
     aabb box_a;
     aabb box_b;
 
@@ -37,20 +37,20 @@ inline bool box_compare(const shared_ptr<hittable> a, const shared_ptr<hittable>
 }
 
 
-bool box_x_compare (const shared_ptr<hittable> a, const shared_ptr<hittable> b) {
+bool box_x_compare (const std::shared_ptr<hittable> a, const std::shared_ptr<hittable> b) {
     return box_compare(a, b, 0);
 }
 
-bool box_y_compare (const shared_ptr<hittable> a, const shared_ptr<hittable> b) {
+bool box_y_compare (const std::shared_ptr<hittable> a, const std::shared_ptr<hittable> b) {
     return box_compare(a, b, 1);
 }
 
-bool box_z_compare (const shared_ptr<hittable> a, const shared_ptr<hittable> b) {
+bool box_z_compare (const std::shared_ptr<hittable> a, const std::shared_ptr<hittable> b) {
     return box_compare(a, b, 2);
 }
 
 bvh_node::bvh_node(
-    const std::vector<shared_ptr<hittable>>& src_objects,
+    const std::vector<std::shared_ptr<hittable>>& src_objects,
     size_t start, size_t end, double time0, double time1
 ) {
     auto objects = src_objects; // Create a modifiable array of the source scene objects

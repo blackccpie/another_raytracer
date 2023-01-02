@@ -6,12 +6,6 @@
 #include <memory>
 #include <random>
 
-// Usings
-
-using std::shared_ptr;
-using std::make_shared;
-using std::sqrt;
-
 // Constants
 const double infinity = std::numeric_limits<double>::infinity();
 const double pi = 3.1415926535897932385;

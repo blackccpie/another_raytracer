@@ -1,6 +1,7 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
+#include "hittable.h"
 #include "texture.h"
 #include "rtweekend.h"
 
@@ -18,8 +19,8 @@ class material {
 
 class lambertian final : public material {
     public:
-        lambertian(const color& a) : albedo(make_shared<solid_color>(a)) {}
-        lambertian(shared_ptr<texture> a) : albedo(a) {}
+        lambertian(const color& a) : albedo(std::make_shared<solid_color>(a)) {}
+        lambertian(std::shared_ptr<texture> a) : albedo(a) {}
 
         virtual bool scatter(
             const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
@@ -38,7 +39,7 @@ class lambertian final : public material {
         }
 
     public:
-        shared_ptr<texture> albedo;
+        std::shared_ptr<texture> albedo;
 };
 
 class metal final : public material {
@@ -99,8 +100,8 @@ class dielectric final : public material {
 
 class diffuse_light final : public material  {
     public:
-        diffuse_light(shared_ptr<texture> a) : emit(a) {}
-        diffuse_light(color c) : emit(make_shared<solid_color>(c)) {}
+        diffuse_light(std::shared_ptr<texture> a) : emit(a) {}
+        diffuse_light(color c) : emit(std::make_shared<solid_color>(c)) {}
 
         virtual bool scatter(
             const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
@@ -113,13 +114,13 @@ class diffuse_light final : public material  {
         }
 
     public:
-        shared_ptr<texture> emit;
+        std::shared_ptr<texture> emit;
 };
 
 class isotropic final : public material {
     public:
-        isotropic(color c) : albedo(make_shared<solid_color>(c)) {}
-        isotropic(shared_ptr<texture> a) : albedo(a) {}
+        isotropic(color c) : albedo(std::make_shared<solid_color>(c)) {}
+        isotropic(std::shared_ptr<texture> a) : albedo(a) {}
 
         virtual bool scatter(
             const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
@@ -130,7 +131,7 @@ class isotropic final : public material {
         }
 
     public:
-        shared_ptr<texture> albedo;
+        std::shared_ptr<texture> albedo;
 };
 
 #endif

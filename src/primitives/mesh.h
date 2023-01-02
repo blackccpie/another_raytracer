@@ -1,6 +1,9 @@
 #ifndef MESH_H
 #define MESH_H
 
+//TODO-AM :  remove!
+#include "ressources.h"
+
 #include "triangle.h"
 
 #include "rapidobj.hpp"
@@ -43,7 +46,7 @@ class mesh {
         hittable_list build() {
             hittable_list triangles;
             
-            auto capsule_texture = std::make_shared<image_texture>(ressources::models_path+"capsule/capsule.jpg");
+            auto capsule_texture = std::make_shared<image_texture>(ressources::models_path+"capsule/capsule.jpg"); // TODO-AM : hardcoded!! (remove associated include!)
 
             auto get_vertice_by_index = [this]<typename T>(T index) {
                 const rapidobj::Array<float>& positions = parse_data.attributes.positions;

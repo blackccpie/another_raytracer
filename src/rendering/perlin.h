@@ -50,7 +50,7 @@ class perlin {
                 temp_p *= 2;
             }
 
-            return fabs(accum);
+            return std::fabs(accum);
         }
 
     private:

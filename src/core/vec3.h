@@ -7,8 +7,6 @@
 #include <cmath>
 #include <iostream>
 
-using std::sqrt;
-
 class vec3 {
     public:
         vec3() : e{0,0,0} {}
@@ -41,7 +39,7 @@ class vec3 {
         }
 
         double length() const {
-            return sqrt(length_squared());
+            return std::sqrt(length_squared());
         }
 
         double length_squared() const {
@@ -51,7 +49,7 @@ class vec3 {
         bool near_zero() const {
             // Return true if the vector is close to zero in all dimensions.
             const auto s = 1e-8;
-            return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
+            return (std::fabs(e[0]) < s) && (std::fabs(e[1]) < s) && (std::fabs(e[2]) < s);
         }
     
         inline static vec3 random() {
