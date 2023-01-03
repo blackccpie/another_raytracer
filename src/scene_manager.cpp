@@ -257,45 +257,94 @@ hittable_list scene_manager::_mesh_scene()
         throw std::logic_error("cannot parse input obj file!");
 }
 
-hittable_list scene_manager::build( int scene_index )
+scene scene_manager::build( scene_alias alias )
 {
-    hittable_list world;
+    scene world;
 
-    switch (scene_index) {
-        case 1:
-            world = _random_scene();
+    switch (alias) {
+        case scene_alias::random:
+            world.objects = _random_scene();
+            world.background = color(0.70, 0.80, 1.00);
+            world.lookfrom = point3(13,2,3);
+            world.lookat = point3(0,0,0);
+            world.vfov = 20.0;
+            world.aperture = 0.1;
             break;
 
-        case 2:
-            world = _two_spheres();
+        case scene_alias::two_spheres:
+            world.objects = _two_spheres();
+            world.background = color(0.70, 0.80, 1.00);
+            world.lookfrom = point3(13,2,3);
+            world.lookat = point3(0,0,0);
+            world.vfov = 20.0;
             break;
             
-        case 3:
-            world = _two_perlin_spheres();
+        case scene_alias::two_perlin_spheres:
+            world.objects = _two_perlin_spheres();
+            world.background = color(0.70, 0.80, 1.00);
+            world.lookfrom = point3(13,2,3);
+            world.lookat = point3(0,0,0);
+            world.vfov = 20.0;
             break;
             
-        case 4:
-            world = _earth();
+        case scene_alias::earth:
+            world.objects = _earth();
+            world.background = color(0.70, 0.80, 1.00);
+            world.lookfrom = point3(13,2,3);
+            world.lookat = point3(0,0,0);
+            world.vfov = 20.0;
             break;
             
-        case 5:
-            world = _simple_light();
+        case scene_alias::simple_light:
+            world.objects = _simple_light();
+            world.background = color(0,0,0);
+            world.lookfrom = point3(26,3,6);
+            world.lookat = point3(0,2,0);
+            world.vfov = 20.0;
             break;
         
-        case 6:
-            world = _cornell_box();
+        case scene_alias::cornell_box:
+            world.objects = _cornell_box();
+            world.background = color(0,0,0);
+            world.lookfrom = point3(278, 278, -800);
+            world.lookat = point3(278, 278, 0);
+            world.vfov = 40.0;
             break;
             
-        case 7:
-            world = _cornell_smoke();
+        case scene_alias::cornell_smoke:
+            world.objects = _cornell_smoke();
+            world.background = color(0,0,0);
+            world.lookfrom = point3(278, 278, -800);
+            world.lookat = point3(278, 278, 0);
+            world.vfov = 40.0;
             break;
             
-        case 8:
-            world = _final_scene();
+        case scene_alias::final:
+            world.objects = _final_scene();
+            world.background = color(0,0,0);
+            world.lookfrom = point3(478, 278, -600);
+            world.lookat = point3(278, 278, 0);
+            world.vfov = 40.0;
             break;
             
-        case 9:
-            world = _mesh_scene();
+        case scene_alias::mesh:
+            world.objects = _mesh_scene();
+            //world.background = color(0.10, 0.10, 0.10);
+            world.background = color(0.70, 0.80, 1.00);
+            //house
+            //world.lookfrom = point3(-200,300,1100);
+            //world.lookat = point3(200,-150,0);
+            //dino
+            //world.lookfrom = point3(0,15,25);
+            //world.lookat = point3(0,10,0);
+            //cow
+            //world.lookfrom = point3(4,2,6);
+            //world.lookat = point3(2,0,0);
+            //capsule
+            world.lookfrom = point3(2,2,1);
+            world.lookat = point3(0,0,0);
+            world.vfov = 75.0;
+            //world.aperture = 0.1;
             break;
             
         default:
