@@ -203,19 +203,25 @@ private:
             }
         };
 
+        auto evaluate_corners = [&](int* data, int i, int j, int square_size)
+        {
+            const auto pixel_upleft = rgb_accessor(data,i,j);
+            const auto pixel_upright = rgb_accessor(data,i+square_size-1,j);
+            const auto pixel_bottomleft = rgb_accessor(data,i,j+square_size-1);
+            const auto pixel_bottomright = rgb_accessor(data,i+square_size-1,j+square_size-1);
+            write_color<int>(pixel_upleft, _stochastic_sample(i,j), samples_per_pixel);
+            write_color<int>(pixel_upright, _stochastic_sample(i+square_size-1,j), samples_per_pixel);
+            write_color<int>(pixel_bottomleft, _stochastic_sample(i,j+square_size-1), samples_per_pixel);
+            write_color<int>(pixel_bottomright, _stochastic_sample(i+square_size-1,j+square_size-1), samples_per_pixel);
+        };
+
         for (int j = 0; j < image_height; j+=big_square_size) {
             progress = j*100/image_height;
             std::cout << "Computing done @" << progress << "%\r" << std::flush;
             for (int i = 0; i < image_width; i+=big_square_size) {
 
                 const auto pixel_upleft = rgb_accessor(work_image.data(),i,j);
-                const auto pixel_upright = rgb_accessor(work_image.data(),i+big_square_size-1,j);
-                const auto pixel_bottomleft = rgb_accessor(work_image.data(),i,j+big_square_size-1);
-                const auto pixel_bottomright = rgb_accessor(work_image.data(),i+big_square_size-1,j+big_square_size-1);
-                write_color<int>(pixel_upleft, _stochastic_sample(i,j), samples_per_pixel);
-                write_color<int>(pixel_upright, _stochastic_sample(i+big_square_size-1,j), samples_per_pixel);
-                write_color<int>(pixel_bottomleft, _stochastic_sample(i,j+big_square_size-1), samples_per_pixel);
-                write_color<int>(pixel_bottomright, _stochastic_sample(i+big_square_size-1,j+big_square_size-1), samples_per_pixel);
+                evaluate_corners(work_image.data(),i,j,big_square_size);
 
                 // do we need smaller resolution
                 bool need_subsampling = _compute_corners_heuristic(pixel_upleft,big_square_size,image_width/*,i,j*/);
@@ -224,14 +230,9 @@ private:
                 {
                     for(int l=j; l<j+big_square_size; l+= mid_square_size) {
                         for(int k=i; k<i+big_square_size; k+=mid_square_size) {
+
                             const auto pixel_upleft2 = rgb_accessor(work_image.data(),k,l);
-                            const auto pixel_upright2 = rgb_accessor(work_image.data(),k+mid_square_size-1,l);
-                            const auto pixel_bottomleft2 = rgb_accessor(work_image.data(),k,l+mid_square_size-1);
-                            const auto pixel_bottomright2 = rgb_accessor(work_image.data(),k+mid_square_size-1,l+mid_square_size-1);
-                            write_color<int>(pixel_upleft2, _stochastic_sample(k,l), samples_per_pixel);
-                            write_color<int>(pixel_upright2, _stochastic_sample(k+mid_square_size-1,l), samples_per_pixel);
-                            write_color<int>(pixel_bottomleft2, _stochastic_sample(k,l+mid_square_size-1), samples_per_pixel);
-                            write_color<int>(pixel_bottomright2, _stochastic_sample(k+mid_square_size-1,l+mid_square_size-1), samples_per_pixel);
+                            evaluate_corners(work_image.data(),k,l,mid_square_size);
 
                             // do we need smaller resolution
                             bool need_subsampling2 = _compute_corners_heuristic(pixel_upleft2,mid_square_size,image_width/*,k,l*/);
@@ -240,14 +241,9 @@ private:
                             {
                                 for(int n=l; n<l+mid_square_size; n+=small_square_size) {
                                     for(int m=k; m<k+mid_square_size; m+=small_square_size) {
+
                                         const auto pixel_upleft3 = rgb_accessor(work_image.data(),m,n);
-                                        const auto pixel_upright3 = rgb_accessor(work_image.data(),m+small_square_size-1,n);
-                                        const auto pixel_bottomleft3 = rgb_accessor(work_image.data(),m,n+small_square_size-1);
-                                        const auto pixel_bottomright3 = rgb_accessor(work_image.data(),m+small_square_size-1,n+small_square_size-1);
-                                        write_color<int>(pixel_upleft3, _stochastic_sample(m,n), samples_per_pixel);
-                                        write_color<int>(pixel_upright3, _stochastic_sample(m+small_square_size-1,n), samples_per_pixel);
-                                        write_color<int>(pixel_bottomleft3, _stochastic_sample(m,n+small_square_size-1), samples_per_pixel);
-                                        write_color<int>(pixel_bottomright3, _stochastic_sample(m+small_square_size-1,n+small_square_size-1), samples_per_pixel);
+                                        evaluate_corners(work_image.data(),m,n,small_square_size);
 
                                         // do we need smallest resolution -> 3px
                                         bool need_subsampling3 = _compute_corners_heuristic(pixel_upleft3,small_square_size,image_width/*,m,n*/);
