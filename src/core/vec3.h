@@ -142,6 +142,18 @@ inline vec3 random_in_unit_disk() {
     }
 }
 
+inline vec3 random_cosine_direction() {
+    auto r1 = random_double();
+    auto r2 = random_double();
+    auto z = std::sqrt(1-r2);
+
+    auto phi = 2*pi*r1;
+    auto x = std::cos(phi)*std::sqrt(r2);
+    auto y = std::sin(phi)*std::sqrt(r2);
+
+    return vec3{x, y, z};
+}
+
 inline vec3 reflect(const vec3& v, const vec3& n) {
     return v - 2*dot(v,n)*n;
 }

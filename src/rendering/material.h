@@ -2,6 +2,7 @@
 #define MATERIAL_H
 
 #include "hittable.h"
+#include "onb.h"
 #include "texture.h"
 #include "rtweekend.h"
 
@@ -33,17 +34,12 @@ class lambertian final : public material {
         virtual bool scatter(
             const ray& r_in, const hit_record& rec, color& albedo_out, ray& scattered, double& pdf
         ) const override {
-            //auto scatter_direction = rec.normal + random_in_unit_sphere();
-            auto scatter_direction = rec.normal + random_unit_vector();
-            //auto scatter_direction = random_in_hemisphere(rec.normal);
-            
-            // Catch degenerate scatter direction
-            if (scatter_direction.near_zero())
-                scatter_direction = rec.normal;
-            
-            scattered = ray(rec.p, unit_vector(scatter_direction), r_in.time());
+            onb uvw;
+            uvw.build_from_w(rec.normal);
+            auto direction = uvw.local(random_cosine_direction());
+            scattered = ray(rec.p, unit_vector(direction), r_in.time());
             albedo_out = albedo->value(rec.u, rec.v, rec.p);
-            pdf = dot(rec.normal, scattered.direction()) / pi;
+            pdf = dot(uvw.w(), scattered.direction()) / pi;
             return true;
         }
         virtual double scattering_pdf(
