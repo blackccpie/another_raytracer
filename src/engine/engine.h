@@ -140,15 +140,17 @@ private:
 
     int _run_adaptive(std::uint8_t* output_image)
     {
-        int progress = 0;
+        std::atomic<int> progress = 0;
+
+        thread_pool tp{2};
 
         dynamic_gui dgui(image_width, image_height, 2, "Adaptive");
 
-        auto rgb_accessor = [&]<typename T>(T* data,int i, int j) -> T* { 
+        const auto rgb_accessor = [&]<typename T>(T* data,int i, int j) -> T* { 
             return data+i*color_channels+j*color_channels*image_width;
         };
 
-        auto to_color_func = [&]<typename T>(T* data, int i, int j) { 
+        const auto to_color_func = [&]<typename T>(T* data, int i, int j) { 
             std::ptrdiff_t offset = i*color_channels+j*color_channels*image_width;
             return color{ 
                 static_cast<double>(data[0+offset]),
@@ -160,6 +162,7 @@ private:
         std::array<int,image_width*image_height*color_channels> work_image; // TODO-AM : int image really needed?
         work_image.fill(-1);
 
+        using namespace std::chrono_literals;
         const auto start = std::chrono::steady_clock::now();
 
         constexpr int big_square_size = 12;
@@ -168,7 +171,8 @@ private:
         static_assert(big_square_size % 3 == 0 && big_square_size % 2 == 0); // must be even and a multiple of 3!!
         static_assert(image_width % big_square_size == 0 && image_height % big_square_size == 0); // image size should perfectly fit big square size for now!!
 
-        auto interpolate_square = [&](int* data, int i, int j, int square_size)
+        /* interpolate square content */
+        const auto interpolate_square = [&](int* data, int i, int j, int square_size)
         {
             const auto pixel_upleft = rgb_accessor(data,i,j);
             const auto x1 = i;
@@ -203,7 +207,8 @@ private:
             }
         };
 
-        auto evaluate_corners = [&](int* data, int i, int j, int square_size)
+        /* evaluate square corner colors */
+        const auto evaluate_corners = [&](int* data, int i, int j, int square_size)
         {
             const auto pixel_upleft = rgb_accessor(data,i,j);
             const auto pixel_upright = rgb_accessor(data,i+square_size-1,j);
@@ -215,75 +220,104 @@ private:
             write_color<int>(pixel_bottomright, _stochastic_sample(i+square_size-1,j+square_size-1), samples_per_pixel);
         };
 
-        for (int j = 0; j < image_height; j+=big_square_size) {
-            progress = j*100/image_height;
-            std::cout << "Computing done @" << progress << "%\r" << std::flush;
-            for (int i = 0; i < image_width; i+=big_square_size) {
+        /* whole process on the "big square" */
+        const auto process_square = [&](int i ,int j)
+        {
+            const auto pixel_upleft = rgb_accessor(work_image.data(),i,j);
+            evaluate_corners(work_image.data(),i,j,big_square_size);
 
-                const auto pixel_upleft = rgb_accessor(work_image.data(),i,j);
-                evaluate_corners(work_image.data(),i,j,big_square_size);
+            // do we need smaller resolution
+            bool need_subsampling = _compute_corners_heuristic(pixel_upleft,big_square_size,image_width/*,i,j*/);
 
-                // do we need smaller resolution
-                bool need_subsampling = _compute_corners_heuristic(pixel_upleft,big_square_size,image_width/*,i,j*/);
+            if(need_subsampling) 
+            {
+                for(int l=j; l<j+big_square_size; l+= mid_square_size) {
+                    for(int k=i; k<i+big_square_size; k+=mid_square_size) {
 
-                if(need_subsampling) 
-                {
-                    for(int l=j; l<j+big_square_size; l+= mid_square_size) {
-                        for(int k=i; k<i+big_square_size; k+=mid_square_size) {
+                        const auto pixel_upleft2 = rgb_accessor(work_image.data(),k,l);
+                        evaluate_corners(work_image.data(),k,l,mid_square_size);
 
-                            const auto pixel_upleft2 = rgb_accessor(work_image.data(),k,l);
-                            evaluate_corners(work_image.data(),k,l,mid_square_size);
+                        // do we need smaller resolution
+                        bool need_subsampling2 = _compute_corners_heuristic(pixel_upleft2,mid_square_size,image_width/*,k,l*/);
 
-                            // do we need smaller resolution
-                            bool need_subsampling2 = _compute_corners_heuristic(pixel_upleft2,mid_square_size,image_width/*,k,l*/);
+                        if(need_subsampling2)
+                        {
+                            for(int n=l; n<l+mid_square_size; n+=small_square_size) {
+                                for(int m=k; m<k+mid_square_size; m+=small_square_size) {
 
-                            if(need_subsampling2)
-                            {
-                                for(int n=l; n<l+mid_square_size; n+=small_square_size) {
-                                    for(int m=k; m<k+mid_square_size; m+=small_square_size) {
+                                    const auto pixel_upleft3 = rgb_accessor(work_image.data(),m,n);
+                                    evaluate_corners(work_image.data(),m,n,small_square_size);
 
-                                        const auto pixel_upleft3 = rgb_accessor(work_image.data(),m,n);
-                                        evaluate_corners(work_image.data(),m,n,small_square_size);
+                                    // do we need smallest resolution -> 3px
+                                    bool need_subsampling3 = _compute_corners_heuristic(pixel_upleft3,small_square_size,image_width/*,m,n*/);
 
-                                        // do we need smallest resolution -> 3px
-                                        bool need_subsampling3 = _compute_corners_heuristic(pixel_upleft3,small_square_size,image_width/*,m,n*/);
-
-                                        if(need_subsampling3) 
-                                        {
-                                            const auto pixel1 = rgb_accessor(work_image.data(),m+1,n);
-                                            const auto pixel2 = rgb_accessor(work_image.data(),m,n+1);
-                                            const auto pixel3 = rgb_accessor(work_image.data(),m+1,n+1);
-                                            const auto pixel4 = rgb_accessor(work_image.data(),m+2,n+1);
-                                            const auto pixel5 = rgb_accessor(work_image.data(),m+1,n+2);
-                                            write_color<int>(pixel1, _stochastic_sample(m+1,n), samples_per_pixel);
-                                            write_color<int>(pixel2, _stochastic_sample(m,n+1), samples_per_pixel);
-                                            write_color<int>(pixel3, _stochastic_sample(m+1,n+1), samples_per_pixel);
-                                            write_color<int>(pixel4, _stochastic_sample(m+2,n+1), samples_per_pixel);
-                                            write_color<int>(pixel5, _stochastic_sample(m+1,n+2), samples_per_pixel);
-                                        }
-                                        else // interpolate smallest square
-                                        {
-                                            interpolate_square(work_image.data(),m,n,small_square_size);
-                                        }
+                                    if(need_subsampling3) 
+                                    {
+                                        const auto pixel1 = rgb_accessor(work_image.data(),m+1,n);
+                                        const auto pixel2 = rgb_accessor(work_image.data(),m,n+1);
+                                        const auto pixel3 = rgb_accessor(work_image.data(),m+1,n+1);
+                                        const auto pixel4 = rgb_accessor(work_image.data(),m+2,n+1);
+                                        const auto pixel5 = rgb_accessor(work_image.data(),m+1,n+2);
+                                        write_color<int>(pixel1, _stochastic_sample(m+1,n), samples_per_pixel);
+                                        write_color<int>(pixel2, _stochastic_sample(m,n+1), samples_per_pixel);
+                                        write_color<int>(pixel3, _stochastic_sample(m+1,n+1), samples_per_pixel);
+                                        write_color<int>(pixel4, _stochastic_sample(m+2,n+1), samples_per_pixel);
+                                        write_color<int>(pixel5, _stochastic_sample(m+1,n+2), samples_per_pixel);
+                                    }
+                                    else // interpolate smallest square
+                                    {
+                                        interpolate_square(work_image.data(),m,n,small_square_size);
                                     }
                                 }
                             }
-                            else // interpolate mid square
-                            {
-                                interpolate_square(work_image.data(),k,l,mid_square_size);
-                            }
+                        }
+                        else // interpolate mid square
+                        {
+                            interpolate_square(work_image.data(),k,l,mid_square_size);
                         }
                     }
                 }
-                else // interpolate big square
-                {
-                    interpolate_square(work_image.data(),i,j,big_square_size);
-                }
-
-                // manage dynamic progress gui
-                dgui.show(work_image.data());
             }
+            else // interpolate big square
+            {
+                interpolate_square(work_image.data(),i,j,big_square_size);
+            }
+        };
+
+        std::mutex mutex;
+
+        const auto run_stripe = [&](int j0, int j1)
+        {
+            for (int j = j0; j < j1; j+=big_square_size) {
+                for (int i = 0; i < image_width; i+=big_square_size) {
+
+                    // process a "big square"
+                    process_square(i,j);
+
+                    {
+                        std::lock_guard<std::mutex> lock(mutex);
+
+                        // manage dynamic progress gui
+                        dgui.show(work_image.data());
+                    }
+                }
+                progress++;
+            }
+        };
+
+        constexpr int stripe_size = big_square_size*(image_height/(4*big_square_size));
+        tp.add_job( [&](){ run_stripe(0,stripe_size); } );
+        tp.add_job( [&](){ run_stripe(stripe_size,2*stripe_size); } );
+        tp.add_job( [&](){ run_stripe(2*stripe_size,3*stripe_size); } );
+        tp.add_job( [&](){ run_stripe(3*stripe_size,image_height); } );
+        while(true) {
+            const auto percent = 100*progress/(image_height/big_square_size);
+            std::cout << "Computing done @" << percent << "%\r" << std::flush;
+            std::this_thread::sleep_for(100ms);
+            if(percent >= 100)
+                break;
         }
+        tp.wait_all();        
 
         std::transform(work_image.cbegin(), work_image.cend(), output_image, 
             [](const int& val){ return static_cast<std::uint8_t>(val); });
@@ -315,8 +349,8 @@ private:
         
         tp.add_job( [&](){ run_stripe(0,image_height/4); } );
         tp.add_job( [&](){ run_stripe(image_height/4,image_height/2); } );
-        tp.add_job( [&](){ run_stripe(image_height/2,color_channels*image_height/4); } );
-        tp.add_job( [&](){ run_stripe(color_channels*image_height/4,image_height); } );
+        tp.add_job( [&](){ run_stripe(image_height/2,3*image_height/4); } );
+        tp.add_job( [&](){ run_stripe(3*image_height/4,image_height); } );
         while(true) {
             const auto percent = 100*progress/image_height;
             std::cout << "Computing done @" << percent << "%\r" << std::flush;
