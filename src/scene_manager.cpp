@@ -120,7 +120,7 @@ hittable_list scene_manager::_cornell_box()
 
     objects.add(std::make_shared<yz_rect>(0, 555, 0, 555, 555, green));
     objects.add(std::make_shared<yz_rect>(0, 555, 0, 555, 0, red));
-    objects.add(std::make_shared<xz_rect>(213, 343, 227, 332, 554, light));
+    objects.add(std::make_shared<flip_face>(std::make_shared<xz_rect>(213, 343, 227, 332, 554, light)));
     objects.add(std::make_shared<xz_rect>(0, 555, 0, 555, 0, white));
     objects.add(std::make_shared<xz_rect>(0, 555, 0, 555, 555, white));
     objects.add(std::make_shared<xy_rect>(0, 555, 0, 555, 555, white));

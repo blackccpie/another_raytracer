@@ -10,7 +10,7 @@ struct hit_record;
 
 class material {
     public:
-        virtual color emitted(double u, double v, const point3& p) const {
+        virtual color emitted(const hit_record& rec) const {
             return color(0,0,0);
         }
         virtual bool scatter(
@@ -120,8 +120,11 @@ class diffuse_light final : public material  {
             return false;
         }
 
-        virtual color emitted(double u, double v, const point3& p) const override {
-            return emit->value(u, v, p);
+        virtual color emitted(const hit_record& rec) const override {
+            if (rec.front_face)
+                return emit->value(rec.u, rec.v, rec.p);
+            else
+                return color(0,0,0);
         }
 
     public:
