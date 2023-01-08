@@ -7,6 +7,11 @@
 #include <cmath>
 #include <iostream>
 
+/***************************/
+/* GEOMETRICAL CONVENTION  */
+/* Y: UP / Z: IN / X: LEFT */
+/***************************/
+
 class vec3 {
     public:
         vec3() : e{0,0,0} {}

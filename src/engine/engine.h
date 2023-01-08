@@ -21,7 +21,7 @@ class engine
 public:
     engine( const camera& _cam, engine_mode _m) : m(_m), cam(_cam) {}
     
-    void set_scene(hittable_list _world, std::shared_ptr<hittable> _lights, color _background)
+    void set_scene(const hittable_list& _world, const hittable_list& _lights, const color& _background)
     {
         world = _world;
         lights = _lights;
@@ -430,7 +430,7 @@ private:
         return static_cast<int>(elapsed_ms);
     }
 
-    color _ray_color(const ray& r, const color& background, const hittable& world, std::shared_ptr<hittable>& lights, int depth) {
+    color _ray_color(const ray& r, const color& background, const hittable& world, const hittable& lights, int depth) {
         hit_record rec;
         
         // If we've exceeded the ray bounce limit, no more light is gathered.
@@ -466,7 +466,7 @@ private:
     engine_mode m = engine_mode::single;
     const camera& cam;
     hittable_list world;
-    std::shared_ptr<hittable> lights;
+    hittable_list lights;
     color background{0,0,0};
 
 public:
