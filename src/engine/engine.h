@@ -4,6 +4,7 @@
 #include "gui.h"
 #include "material.h"
 #include "hittable_list.h"
+#include "pdf.h"
 #include "threadpool.h"
 
 enum class engine_mode
@@ -20,9 +21,10 @@ class engine
 public:
     engine( const camera& _cam, engine_mode _m) : m(_m), cam(_cam) {}
     
-    void set_scene(hittable_list _world, color _background)
+    void set_scene(hittable_list _world, std::shared_ptr<hittable> _lights, color _background)
     {
         world = _world;
+        lights = _lights;
         background = _background;
     }
     
@@ -57,7 +59,7 @@ private:
             auto u = (i + random_double()) / (image_width-1);
             auto v = ((image_height-1-j) + random_double()) / (image_height-1); // spatial convention, not image convention!
             ray r = cam.get_ray(u, v);
-            pixel_color += _ray_color(r, background, world, max_depth);
+            pixel_color += _ray_color(r, background, world, lights, max_depth);
         }
         return pixel_color;
     }
@@ -142,7 +144,7 @@ private:
     {
         std::atomic<int> progress = 0;
 
-        thread_pool tp{2};
+        thread_pool tp{4};
 
         dynamic_gui dgui(image_width, image_height, 2, "Adaptive");
 
@@ -428,7 +430,7 @@ private:
         return static_cast<int>(elapsed_ms);
     }
 
-    color _ray_color(const ray& r, const color& background, const hittable& world, int depth) {
+    color _ray_color(const ray& r, const color& background, const hittable& world, std::shared_ptr<hittable>& lights, int depth) {
         hit_record rec;
         
         // If we've exceeded the ray bounce limit, no more light is gathered.
@@ -443,39 +445,31 @@ private:
 
         ray scattered;
         color albedo;
-        double pdf = 0.;
+        double pdf_val = 0.;
         
-        if (!rec.mat_ptr->scatter(r, rec, albedo, scattered, pdf))
-            return emitted;
-        
-        auto on_light = point3(random_double(213,343), 554, random_double(227,332));
-        auto to_light = on_light - rec.p;
-        auto distance_squared = to_light.length_squared();
-        to_light = unit_vector(to_light);
-
-        if (dot(to_light, rec.normal) < 0)
+        if (!rec.mat_ptr->scatter(r, rec, albedo, scattered, pdf_val))
             return emitted;
 
-        double light_area = (343-213)*(332-227);
-        auto light_cosine = std::fabs(to_light.y());
-        if (light_cosine < 0.000001)
-            return emitted;
+        auto p0 = std::make_shared<hittable_pdf>(lights, rec.p);
+        auto p1 = std::make_shared<cosine_pdf>(rec.normal);
+        mixture_pdf mixed_pdf(p0, p1);
 
-        pdf = distance_squared / (light_cosine * light_area);
-        scattered = ray(rec.p, to_light, r.time());
+        scattered = ray(rec.p, mixed_pdf.generate(), r.time());
+        pdf_val = mixed_pdf.value(scattered.direction());
 
         return emitted + albedo * rec.mat_ptr->scattering_pdf(r, rec, scattered)
-                                * _ray_color(scattered, background, world, depth-1) / pdf;
+                                * _ray_color(scattered, background, world, lights, depth-1) / pdf_val;
     }
     
 private:
     engine_mode m = engine_mode::single;
     const camera& cam;
     hittable_list world;
+    std::shared_ptr<hittable> lights;
     color background{0,0,0};
 
 public:
-    static constexpr int samples_per_pixel = 100;
+    static constexpr int samples_per_pixel = 1000;
     static constexpr int max_depth = 50;
 };
 

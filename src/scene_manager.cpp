@@ -118,6 +118,10 @@ hittable_list scene_manager::_cornell_box()
     auto green = std::make_shared<lambertian>(color(.12, .45, .15));
     auto light = std::make_shared<diffuse_light>(color(15, 15, 15));
 
+    // TODO-AM : clarify this whole double lighting object thing!!!!!
+    world.lights = std::make_shared<xz_rect>(213, 343, 227, 332, 554, std::shared_ptr<material>());
+    //world.lights = std::make_shared<flip_face>(std::make_shared<xz_rect>(213, 343, 227, 332, 554, light));
+
     objects.add(std::make_shared<yz_rect>(0, 555, 0, 555, 555, green));
     objects.add(std::make_shared<yz_rect>(0, 555, 0, 555, 0, red));
     objects.add(std::make_shared<flip_face>(std::make_shared<xz_rect>(213, 343, 227, 332, 554, light)));
@@ -259,8 +263,6 @@ hittable_list scene_manager::_mesh_scene()
 
 scene scene_manager::build( scene_alias alias )
 {
-    scene world;
-
     switch (alias) {
         case scene_alias::random:
             world.objects = _random_scene();

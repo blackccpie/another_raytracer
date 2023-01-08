@@ -11,6 +11,7 @@ struct scene
     double aperture = 0.;
     color background{0,0,0};
     hittable_list objects;
+    std::shared_ptr<hittable> lights;
 };
 
 enum class scene_alias
@@ -40,6 +41,8 @@ private:
     hittable_list _cornell_smoke();
     hittable_list _final_scene();
     hittable_list _mesh_scene();
+private:
+    scene world;
 };
 
 #endif
