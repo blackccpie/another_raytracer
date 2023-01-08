@@ -3,10 +3,33 @@
 
 #include "hittable_list.h"
 
+struct scene
+{
+    point3 lookfrom;
+    point3 lookat;
+    double vfov = 40.;
+    double aperture = 0.;
+    color background{0,0,0};
+    hittable_list objects;
+};
+
+enum class scene_alias
+{
+    random = 1,
+    two_spheres = 2,
+    two_perlin_spheres = 3,
+    earth = 4,
+    simple_light = 5,
+    cornell_box = 6,
+    cornell_smoke = 7,
+    final = 8,
+    mesh = 9
+};
+
 class scene_manager
 {
 public:
-    hittable_list build( int scene_index );
+    scene build( scene_alias alias );
 private:
     hittable_list _random_scene();
     hittable_list _two_spheres();

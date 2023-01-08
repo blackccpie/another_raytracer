@@ -38,7 +38,7 @@ hittable_list scene_manager::_random_scene()
                     auto albedo = color::random(0.5, 1);
                     auto fuzz = random_double(0, 0.5);
                     sphere_material = std::make_shared<metal>(albedo, fuzz);
-                    objects.add(make_shared<sphere>(center, 0.2, sphere_material));
+                    objects.add(std::make_shared<sphere>(center, 0.2, sphere_material));
                 } else {
                     // glass
                     sphere_material = std::make_shared<dielectric>(1.5);
@@ -49,13 +49,13 @@ hittable_list scene_manager::_random_scene()
     }
 
     auto material1 = std::make_shared<dielectric>(1.5);
-    objects.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
+    objects.add(std::make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
 
     auto material2 = std::make_shared<lambertian>(color(0.4, 0.2, 0.1));
-    objects.add(make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
+    objects.add(std::make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
 
     auto material3 = std::make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
-    objects.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
+    objects.add(std::make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
 
     hittable_list world;
     world.add(std::make_shared<bvh_node>(objects, 0, 1));
@@ -69,8 +69,8 @@ hittable_list scene_manager::_two_spheres()
 
     auto checker = std::make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
 
-    objects.add(std::make_shared<sphere>(point3(0,-10, 0), 10, make_shared<lambertian>(checker)));
-    objects.add(std::make_shared<sphere>(point3(0, 10, 0), 10, make_shared<lambertian>(checker)));
+    objects.add(std::make_shared<sphere>(point3(0,-10, 0), 10, std::make_shared<lambertian>(checker)));
+    objects.add(std::make_shared<sphere>(point3(0, 10, 0), 10, std::make_shared<lambertian>(checker)));
 
     return objects;
 }
@@ -80,8 +80,8 @@ hittable_list scene_manager::_two_perlin_spheres()
     hittable_list objects;
 
     auto pertext = std::make_shared<noise_texture>(4);
-    objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
-    objects.add(make_shared<sphere>(point3(0, 2, 0), 2, make_shared<lambertian>(pertext)));
+    objects.add(std::make_shared<sphere>(point3(0,-1000,0), 1000, std::make_shared<lambertian>(pertext)));
+    objects.add(std::make_shared<sphere>(point3(0, 2, 0), 2, std::make_shared<lambertian>(pertext)));
 
     return objects;
 }
@@ -100,8 +100,8 @@ hittable_list scene_manager::_simple_light()
     hittable_list objects;
 
     auto pertext = std::make_shared<noise_texture>(4);
-    objects.add(std::make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
-    objects.add(std::make_shared<sphere>(point3(0,2,0), 2, make_shared<lambertian>(pertext)));
+    objects.add(std::make_shared<sphere>(point3(0,-1000,0), 1000, std::make_shared<lambertian>(pertext)));
+    objects.add(std::make_shared<sphere>(point3(0,2,0), 2, std::make_shared<lambertian>(pertext)));
 
     auto difflight = std::make_shared<diffuse_light>(color(4,4,4));
     objects.add(std::make_shared<xy_rect>(3, 5, 1, 3, -2, difflight));
@@ -184,7 +184,7 @@ hittable_list scene_manager::_final_scene()
             auto y1 = random_double(1,101);
             auto z1 = z0 + w;
 
-            boxes1.add(make_shared<box>(point3(x0,y0,z0), point3(x1,y1,z1), ground));
+            boxes1.add(std::make_shared<box>(point3(x0,y0,z0), point3(x1,y1,z1), ground));
         }
     }
 
@@ -214,7 +214,7 @@ hittable_list scene_manager::_final_scene()
     auto emat = std::make_shared<lambertian>(std::make_shared<image_texture>(ressources::earthmap_texture));
     objects.add(std::make_shared<sphere>(point3(400,200,400), 100, emat));
     auto pertext = std::make_shared<noise_texture>(0.1);
-    objects.add(std::make_shared<sphere>(point3(220,280,300), 80, make_shared<lambertian>(pertext)));
+    objects.add(std::make_shared<sphere>(point3(220,280,300), 80, std::make_shared<lambertian>(pertext)));
 
     hittable_list boxes2;
     auto white = std::make_shared<lambertian>(color(.73, .73, .73));
@@ -246,56 +246,105 @@ hittable_list scene_manager::_mesh_scene()
         // lighting
         auto light = std::make_shared<diffuse_light>(color(7, 7, 7));
         world.add(std::make_shared<xz_rect>(123, 423, 147, 412, 554, light));
-        //world.add(make_shared<sphere>(point3(0, 800, 500), 100, light));
+        //world.add(std::make_shared<sphere>(point3(0, 800, 500), 100, light));
         
         // thin mist
         auto boundary = std::make_shared<sphere>(point3(0, 0, 0), 5000, std::make_shared<dielectric>(1.5));
-        world.add(make_shared<constant_medium>(boundary, .0001, color(1,1,1)));
+        world.add(std::make_shared<constant_medium>(boundary, .0001, color(1,1,1)));
         return world;
     }
     else
         throw std::logic_error("cannot parse input obj file!");
 }
 
-hittable_list scene_manager::build( int scene_index )
+scene scene_manager::build( scene_alias alias )
 {
-    hittable_list world;
+    scene world;
 
-    switch (scene_index) {
-        case 1:
-            world = _random_scene();
+    switch (alias) {
+        case scene_alias::random:
+            world.objects = _random_scene();
+            world.background = color(0.70, 0.80, 1.00);
+            world.lookfrom = point3(13,2,3);
+            world.lookat = point3(0,0,0);
+            world.vfov = 20.0;
+            world.aperture = 0.1;
             break;
 
-        case 2:
-            world = _two_spheres();
+        case scene_alias::two_spheres:
+            world.objects = _two_spheres();
+            world.background = color(0.70, 0.80, 1.00);
+            world.lookfrom = point3(13,2,3);
+            world.lookat = point3(0,0,0);
+            world.vfov = 20.0;
             break;
             
-        case 3:
-            world = _two_perlin_spheres();
+        case scene_alias::two_perlin_spheres:
+            world.objects = _two_perlin_spheres();
+            world.background = color(0.70, 0.80, 1.00);
+            world.lookfrom = point3(13,2,3);
+            world.lookat = point3(0,0,0);
+            world.vfov = 20.0;
             break;
             
-        case 4:
-            world = _earth();
+        case scene_alias::earth:
+            world.objects = _earth();
+            world.background = color(0.70, 0.80, 1.00);
+            world.lookfrom = point3(13,2,3);
+            world.lookat = point3(0,0,0);
+            world.vfov = 20.0;
             break;
             
-        case 5:
-            world = _simple_light();
+        case scene_alias::simple_light:
+            world.objects = _simple_light();
+            world.background = color(0,0,0);
+            world.lookfrom = point3(26,3,6);
+            world.lookat = point3(0,2,0);
+            world.vfov = 20.0;
             break;
         
-        case 6:
-            world = _cornell_box();
+        case scene_alias::cornell_box:
+            world.objects = _cornell_box();
+            world.background = color(0,0,0);
+            world.lookfrom = point3(278, 278, -800);
+            world.lookat = point3(278, 278, 0);
+            world.vfov = 40.0;
             break;
             
-        case 7:
-            world = _cornell_smoke();
+        case scene_alias::cornell_smoke:
+            world.objects = _cornell_smoke();
+            world.background = color(0,0,0);
+            world.lookfrom = point3(278, 278, -800);
+            world.lookat = point3(278, 278, 0);
+            world.vfov = 40.0;
             break;
             
-        case 8:
-            world = _final_scene();
+        case scene_alias::final:
+            world.objects = _final_scene();
+            world.background = color(0,0,0);
+            world.lookfrom = point3(478, 278, -600);
+            world.lookat = point3(278, 278, 0);
+            world.vfov = 40.0;
             break;
             
-        case 9:
-            world = _mesh_scene();
+        case scene_alias::mesh:
+            world.objects = _mesh_scene();
+            //world.background = color(0.10, 0.10, 0.10);
+            world.background = color(0.70, 0.80, 1.00);
+            //house
+            //world.lookfrom = point3(-200,300,1100);
+            //world.lookat = point3(200,-150,0);
+            //dino
+            //world.lookfrom = point3(0,15,25);
+            //world.lookat = point3(0,10,0);
+            //cow
+            //world.lookfrom = point3(4,2,6);
+            //world.lookat = point3(2,0,0);
+            //capsule
+            world.lookfrom = point3(2,2,1);
+            world.lookat = point3(0,0,0);
+            world.vfov = 75.0;
+            //world.aperture = 0.1;
             break;
             
         default:
