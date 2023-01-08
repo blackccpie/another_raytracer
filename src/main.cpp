@@ -40,7 +40,7 @@ int main(int argc, char **argv) try
 
     std::array<std::uint8_t,image_width*image_height*color_channels> output_image{0};
 
-    engine<image_width,image_height,color_channels> eng( cam, engine_mode::parallel_stripes );
+    engine<image_width,image_height,color_channels> eng( cam, engine_mode::adaptive );
     eng.set_scene(world.objects,world.lights,world.background);
     auto elapsed_ms = eng.run( output_image.data() );
     

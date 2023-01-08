@@ -119,6 +119,8 @@ hittable_list scene_manager::_cornell_box()
     auto light = std::make_shared<diffuse_light>(color(15, 15, 15));
 
     // TODO-AM : clarify this whole double lighting object thing!!!!!
+   // world.lights.add(std::make_shared<xz_rect>(213, 343, 227, 332, 554, std::shared_ptr<material>()));
+    //world.lights.add(std::make_shared<sphere>(point3(190, 90, 190), 90, std::shared_ptr<material>()));
     world.lights = std::make_shared<xz_rect>(213, 343, 227, 332, 554, std::shared_ptr<material>());
     //world.lights = std::make_shared<flip_face>(std::make_shared<xz_rect>(213, 343, 227, 332, 554, light));
 
