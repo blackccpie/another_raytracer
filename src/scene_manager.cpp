@@ -120,7 +120,7 @@ hittable_list scene_manager::_cornell_box()
 
     // TODO-AM : clarify this whole double lighting object thing!!!!!
     world.lights.add(std::make_shared<xz_rect>(213, 343, 227, 332, 554, std::shared_ptr<material>()));
-    //world.lights.add(std::make_shared<sphere>(point3(190, 90, 190), 90, std::shared_ptr<material>()));
+    world.lights.add(std::make_shared<sphere>(point3(190, 90, 190), 90, std::shared_ptr<material>()));
 
     objects.add(std::make_shared<yz_rect>(0, 555, 0, 555, 555, green));
     objects.add(std::make_shared<yz_rect>(0, 555, 0, 555, 0, red));
@@ -129,19 +129,19 @@ hittable_list scene_manager::_cornell_box()
     objects.add(std::make_shared<xz_rect>(0, 555, 0, 555, 555, white));
     objects.add(std::make_shared<xy_rect>(0, 555, 0, 555, 555, white));
     
-    auto aluminum = std::make_shared<metal>(color(0.8, 0.85, 0.88), 0.0);
-    std::shared_ptr<hittable> box1 = std::make_shared<box>(point3(0, 0, 0), point3(165, 330, 165), aluminum);
+    //auto aluminum = std::make_shared<metal>(color(0.8, 0.85, 0.88), 0.0);
+    std::shared_ptr<hittable> box1 = std::make_shared<box>(point3(0, 0, 0), point3(165, 330, 165), white/*aluminum*/);
     box1 = std::make_shared<rotate_y>(box1, 15);
     box1 = std::make_shared<translate>(box1, vec3(265,0,295));
     objects.add(box1);
     
-    std::shared_ptr<hittable> box2 = std::make_shared<box>(point3(0,0,0), point3(165,165,165), white);
-    box2 = std::make_shared<rotate_y>(box2, -18);
-    box2 = std::make_shared<translate>(box2, vec3(130,0,65));
-    objects.add(box2);
+    //std::shared_ptr<hittable> box2 = std::make_shared<box>(point3(0,0,0), point3(165,165,165), white);
+    //box2 = std::make_shared<rotate_y>(box2, -18);
+    //box2 = std::make_shared<translate>(box2, vec3(130,0,65));
+    //objects.add(box2);
 
-    //auto glass = std::make_shared<dielectric>(1.5);
-    //objects.add(std::make_shared<sphere>(point3(190,90,190), 90 , glass));
+    auto glass = std::make_shared<dielectric>(1.5);
+    objects.add(std::make_shared<sphere>(point3(190,90,190), 90 , glass));
 
     return objects;
 }

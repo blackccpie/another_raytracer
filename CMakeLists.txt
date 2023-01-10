@@ -24,6 +24,7 @@ set (sources_list
 set (headers_list
     src/scene_manager.h
     src/core/color.h
+    src/core/onb.h
     src/core/ray.h
     src/core/vec3.h
     src/engine/camera.h
