@@ -34,6 +34,8 @@ public:
             return -1;
         }
         
+        std::cout << "--> engine raycasting start" << std::endl;
+
         switch(m)
         {
         case engine_mode::single:
@@ -46,6 +48,8 @@ public:
         case engine_mode::parallel_images:
             return _run_parallel_images(output_image);
         }
+
+        std::cout << "--> engine raycasting stop" << std::endl;
     }
     
 private:

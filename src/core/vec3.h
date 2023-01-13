@@ -1,7 +1,7 @@
 #ifndef VEC3_H
 #define VEC3_H
 
-#include "rtweekend.h"
+#include "tracer_utils.h"
 
 #include <algorithm>
 #include <cmath>
