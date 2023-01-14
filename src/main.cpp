@@ -39,8 +39,7 @@ int main(int argc, char **argv) try
 
     // Allocate rendering frame
     frame_allocator<std::uint8_t,tc::frame_size,1> frame_alloc;
-    auto output_image = frame_alloc.get_frame(0);
-    output_image.fill(0);
+    auto& output_image = frame_alloc.get_frame(0,0);
 
     engine<tc::image_width,tc::image_height,tc::color_channels> eng( cam, engine_mode::adaptive );
     eng.set_scene(world.objects,world.background);

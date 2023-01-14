@@ -165,8 +165,7 @@ private:
         };
 
         frame_allocator<int,tracer_constants::frame_size,1> frame_alloc; // TODO-AM : int image really needed?
-        auto work_image = frame_alloc.get_frame(0);
-        work_image.fill(-1);
+        auto& work_image = frame_alloc.get_frame(0,-1);
 
         using namespace std::chrono_literals;
         const auto start = std::chrono::steady_clock::now();
@@ -175,7 +174,8 @@ private:
         constexpr int mid_square_size = big_square_size/2;
         constexpr int small_square_size = mid_square_size/2;
         static_assert(big_square_size % 3 == 0 && big_square_size % 2 == 0); // must be even and a multiple of 3!!
-        static_assert(image_width % big_square_size == 0 && image_height % big_square_size == 0); // image size should perfectly fit big square size for now!!
+        if(image_width % big_square_size != 0 || image_height % big_square_size != 0) 
+            throw std::logic_error( "for adaptive strategy image size should perfectly fit big square size for now!!");
 
         /* interpolate square content */
         const auto interpolate_square = [&](int* data, int i, int j, int square_size)
@@ -378,14 +378,10 @@ private:
         thread_pool tp{4};
 
         frame_allocator<float,tracer_constants::frame_size,4> frame_alloc;
-        auto work_image1 = frame_alloc.get_frame(0);
-        work_image1.fill(0);
-        auto work_image2 = frame_alloc.get_frame(1);
-        work_image2.fill(0);
-        auto work_image3 = frame_alloc.get_frame(2);
-        work_image3.fill(0);
-        auto work_image4 = frame_alloc.get_frame(3);
-        work_image4.fill(0);
+        auto& work_image1 = frame_alloc.get_frame(0,0.f);
+        auto& work_image2 = frame_alloc.get_frame(1,0.f);
+        auto& work_image3 = frame_alloc.get_frame(2,0.f);
+        auto& work_image4 = frame_alloc.get_frame(3,0.f);
 
         auto run_image = [&](float* partial_image,int small_samples_per_pixel) {
             for (int j = 0; j < image_height; ++j) {
