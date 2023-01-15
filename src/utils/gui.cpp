@@ -22,22 +22,24 @@ void gui::display( const std::uint8_t* img, int w, int h, int scale ) {
     }
 }
 
-dynamic_gui::dynamic_gui(int w, int h, int scale, const std::string& title) 
+dynamic_gui_impl::dynamic_gui_impl(int w, int h, int scale, const std::string& title) 
     : width(w), height(h),
     display( std::make_unique<CImgDisplay>(scale*w,scale*h,title.c_str()) ),
-    dthread( &dynamic_gui::_display_thread, this )
+    dthread( &dynamic_gui_impl::_display_thread, this )
 {
 }
 
-dynamic_gui::~dynamic_gui()
+dynamic_gui_impl::~dynamic_gui_impl()
 {
     display->close();
     dthread.join();
 }
 
 template<typename T>
-void dynamic_gui::show(const T* img)
+void dynamic_gui_impl::show(const T* img)
 {
+    std::lock_guard<std::mutex> lock(mutex); // protect from concurrent calls
+
     // http://www.cimg.eu/reference/storage.html
     // https://www.codefull.org/2014/11/cimg-does-not-store-pixels-in-the-interleaved-format/
     CImg<T> image(img,3,static_cast<std::uint32_t>(width),static_cast<std::uint32_t>(height),1,false);
@@ -45,10 +47,10 @@ void dynamic_gui::show(const T* img)
     display->display(image);
 }
 
-template void dynamic_gui::show<std::uint8_t>(const std::uint8_t* img);
-template void dynamic_gui::show<std::int32_t>(const std::int32_t* img);
+template void dynamic_gui_impl::show<std::uint8_t>(const std::uint8_t* img);
+template void dynamic_gui_impl::show<std::int32_t>(const std::int32_t* img);
 
-void dynamic_gui::_display_thread()
+void dynamic_gui_impl::_display_thread()
 {
     while (!display->is_closed()) {
         display->wait(100);

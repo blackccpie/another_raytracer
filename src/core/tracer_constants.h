@@ -11,6 +11,7 @@ namespace tracer_constants
     constexpr bool stack_alloc = true;
     constexpr int samples_per_pixel = 100;
     constexpr int max_depth = 50;
+    constexpr bool progress_gui = true;
 }
 
 #endif

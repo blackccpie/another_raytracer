@@ -44,8 +44,8 @@ set (headers_list
     src/rendering/texture.h
     src/utils/gui.h
     src/utils/imageio.h
-    src/utils/rtweekend.h
     src/utils/threadpool.h
+    src/utils/tracer_utils.h
 )
 
 add_executable(raycaster ${sources_list} ${headers_list})

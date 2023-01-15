@@ -71,6 +71,8 @@ private:
     {
         int progress = 0;
 
+        dynamic_gui dgui(image_width, image_height, 2, "Single");
+
         const auto start = std::chrono::steady_clock::now();
         
         for (int j = 0; j < image_height; ++j) {
@@ -81,6 +83,9 @@ private:
                 write_color(output_image+offset, _stochastic_sample(i,j), tracer_constants::samples_per_pixel);
                 offset += color_channels;
             }
+
+            // manage dynamic progress gui
+            dgui.show(output_image);
         }
 
         const auto end = std::chrono::steady_clock::now();
@@ -290,8 +295,6 @@ private:
             }
         };
 
-        std::mutex mutex;
-
         const auto run_stripe = [&](int j0, int j1)
         {
             for (int j = j0; j < j1; j+=big_square_size) {
@@ -300,12 +303,8 @@ private:
                     // process a "big square"
                     process_square(i,j);
 
-                    {
-                        std::lock_guard<std::mutex> lock(mutex);
-
-                        // manage dynamic progress gui
-                        dgui.show(work_image.data());
-                    }
+                    // manage dynamic progress gui
+                    dgui.show(work_image.data());
                 }
                 progress++;
             }
@@ -337,8 +336,10 @@ private:
     {
         std::atomic<int> progress = 0;
 
+        dynamic_gui dgui(image_width, image_height, 2, "Parallel Stripes");
+
         thread_pool tp{4};
-        
+
         auto run_stripe = [&](int j0, int j1) {
             for (int j = j0; j < j1; ++j) {
                 int offset = color_channels*j*image_width;
@@ -347,7 +348,10 @@ private:
                     offset += color_channels;
                 }
                 progress++;
-            }
+
+                // manage dynamic progress gui
+                dgui.show(output_image);
+            }         
         };
         
         using namespace std::chrono_literals;
@@ -376,6 +380,11 @@ private:
         std::atomic<int> progress = 0;
 
         thread_pool tp{4};
+
+        if constexpr (tracer_constants::progress_gui)
+        {
+            std::cout << "progress gui not available for now for parallel images mode :-(" << std::endl;
+        }
 
         frame_allocator<float,tracer_constants::frame_size,4> frame_alloc;
         auto& work_image1 = frame_alloc.get_frame(0,0.f);
