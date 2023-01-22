@@ -1,7 +1,7 @@
 #ifndef ONB_H
 #define ONB_H
 
-#include "rtweekend.h"
+#include "tracer_utils.h"
 
 class onb {
     public:

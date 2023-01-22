@@ -42,7 +42,7 @@ int main(int argc, char **argv) try
     auto& output_image = frame_alloc.get_frame(0,0);
 
     engine<tc::image_width,tc::image_height,tc::color_channels> eng( cam, engine_mode::adaptive );
-    eng.set_scene(world.objects,world.background);
+    eng.set_scene(world.objects,world.lights,world.background);
     auto elapsed_ms = eng.run( output_image.data() );
     
     std::cout << std::endl << "Rendering computed in milliseconds: " << elapsed_ms << " ms" << std::endl;

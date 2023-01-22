@@ -64,7 +64,7 @@ private:
             auto u = (i + random_double()) / (image_width-1);
             auto v = ((image_height-1-j) + random_double()) / (image_height-1); // spatial convention, not image convention!
             ray r = cam.get_ray(u, v);
-            pixel_color += _ray_color(r, background, world, tracer_constants::max_depth);
+            pixel_color += _ray_color(r, background, world, lights, tracer_constants::max_depth);
         }
         return pixel_color;
     }

@@ -1,7 +1,7 @@
 #ifndef PDF_H
 #define PDF_H
 
-#include "rtweekend.h"
+#include "tracer_utils.h"
 
 class pdf {
     public:
