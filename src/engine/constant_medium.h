@@ -1,7 +1,7 @@
 #ifndef CONSTANT_MEDIUM_H
 #define CONSTANT_MEDIUM_H
 
-#include "rtweekend.h"
+#include "tracer_utils.h"
 
 #include "hittable.h"
 #include "material.h"

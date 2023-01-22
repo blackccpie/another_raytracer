@@ -1,6 +1,7 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#include "frame_allocator.h"
 #include "gui.h"
 #include "material.h"
 #include "hittable_list.h"
@@ -36,6 +37,8 @@ public:
             return -1;
         }
         
+        std::cout << "--> engine raycasting start" << std::endl;
+
         switch(m)
         {
         case engine_mode::single:
@@ -48,18 +51,20 @@ public:
         case engine_mode::parallel_images:
             return _run_parallel_images(output_image);
         }
+
+        std::cout << "--> engine raycasting stop" << std::endl;
     }
     
 private:
 
-    inline color _stochastic_sample(int i, int j, int _samples_per_pixel = samples_per_pixel)
+    inline color _stochastic_sample(int i, int j, int _samples_per_pixel = tracer_constants::samples_per_pixel)
     {
         color pixel_color(0, 0, 0);
         for (int s = 0; s < _samples_per_pixel; ++s) {
             auto u = (i + random_double()) / (image_width-1);
             auto v = ((image_height-1-j) + random_double()) / (image_height-1); // spatial convention, not image convention!
             ray r = cam.get_ray(u, v);
-            pixel_color += _ray_color(r, background, world, lights, max_depth);
+            pixel_color += _ray_color(r, background, world, tracer_constants::max_depth);
         }
         return pixel_color;
     }
@@ -68,6 +73,8 @@ private:
     {
         int progress = 0;
 
+        dynamic_gui dgui(image_width, image_height, 2, "Single");
+
         const auto start = std::chrono::steady_clock::now();
         
         for (int j = 0; j < image_height; ++j) {
@@ -75,9 +82,12 @@ private:
             std::cout << "Computing done @" << progress << "%\r" << std::flush;
             int offset = color_channels*j*image_width;
             for (int i = 0; i < image_width; ++i) {
-                write_color(output_image+offset, _stochastic_sample(i,j), samples_per_pixel);
+                write_color(output_image+offset, _stochastic_sample(i,j), tracer_constants::samples_per_pixel);
                 offset += color_channels;
             }
+
+            // manage dynamic progress gui
+            dgui.show(output_image);
         }
 
         const auto end = std::chrono::steady_clock::now();
@@ -113,7 +123,7 @@ private:
 
         /*write_color<int>(   upleft_corner+(square_length/2)*color_channels+(square_length/2)*color_channels*image_width, 
                             _stochastic_sample(p+static_cast<int>(square_length/2),q+static_cast<int>(square_length/2)),
-                            samples_per_pixel);
+                            tracer_constants::samples_per_pixel);
 
         const auto [crx,cgx,cbx] = rgb_tuple_accessor(upleft_corner,square_length/2,square_length/2);
         const auto distancex1 = (cr1 - crx)*(cr1 - crx) + (cg1 - cgx)*(cg1 - cgx) + (cb1 - cbx)*(cb1 - cbx);
@@ -161,8 +171,8 @@ private:
             };
         };
 
-        std::array<int,image_width*image_height*color_channels> work_image; // TODO-AM : int image really needed?
-        work_image.fill(-1);
+        frame_allocator<int,tracer_constants::frame_size,1> frame_alloc; // TODO-AM : int image really needed?
+        auto& work_image = frame_alloc.get_frame(0,-1);
 
         using namespace std::chrono_literals;
         const auto start = std::chrono::steady_clock::now();
@@ -171,7 +181,8 @@ private:
         constexpr int mid_square_size = big_square_size/2;
         constexpr int small_square_size = mid_square_size/2;
         static_assert(big_square_size % 3 == 0 && big_square_size % 2 == 0); // must be even and a multiple of 3!!
-        static_assert(image_width % big_square_size == 0 && image_height % big_square_size == 0); // image size should perfectly fit big square size for now!!
+        if(image_width % big_square_size != 0 || image_height % big_square_size != 0) 
+            throw std::logic_error( "for adaptive strategy image size should perfectly fit big square size for now!!");
 
         /* interpolate square content */
         const auto interpolate_square = [&](int* data, int i, int j, int square_size)
@@ -216,10 +227,10 @@ private:
             const auto pixel_upright = rgb_accessor(data,i+square_size-1,j);
             const auto pixel_bottomleft = rgb_accessor(data,i,j+square_size-1);
             const auto pixel_bottomright = rgb_accessor(data,i+square_size-1,j+square_size-1);
-            write_color<int>(pixel_upleft, _stochastic_sample(i,j), samples_per_pixel);
-            write_color<int>(pixel_upright, _stochastic_sample(i+square_size-1,j), samples_per_pixel);
-            write_color<int>(pixel_bottomleft, _stochastic_sample(i,j+square_size-1), samples_per_pixel);
-            write_color<int>(pixel_bottomright, _stochastic_sample(i+square_size-1,j+square_size-1), samples_per_pixel);
+            write_color<int>(pixel_upleft, _stochastic_sample(i,j), tracer_constants::samples_per_pixel);
+            write_color<int>(pixel_upright, _stochastic_sample(i+square_size-1,j), tracer_constants::samples_per_pixel);
+            write_color<int>(pixel_bottomleft, _stochastic_sample(i,j+square_size-1), tracer_constants::samples_per_pixel);
+            write_color<int>(pixel_bottomright, _stochastic_sample(i+square_size-1,j+square_size-1), tracer_constants::samples_per_pixel);
         };
 
         /* whole process on the "big square" */
@@ -260,11 +271,11 @@ private:
                                         const auto pixel3 = rgb_accessor(work_image.data(),m+1,n+1);
                                         const auto pixel4 = rgb_accessor(work_image.data(),m+2,n+1);
                                         const auto pixel5 = rgb_accessor(work_image.data(),m+1,n+2);
-                                        write_color<int>(pixel1, _stochastic_sample(m+1,n), samples_per_pixel);
-                                        write_color<int>(pixel2, _stochastic_sample(m,n+1), samples_per_pixel);
-                                        write_color<int>(pixel3, _stochastic_sample(m+1,n+1), samples_per_pixel);
-                                        write_color<int>(pixel4, _stochastic_sample(m+2,n+1), samples_per_pixel);
-                                        write_color<int>(pixel5, _stochastic_sample(m+1,n+2), samples_per_pixel);
+                                        write_color<int>(pixel1, _stochastic_sample(m+1,n), tracer_constants::samples_per_pixel);
+                                        write_color<int>(pixel2, _stochastic_sample(m,n+1), tracer_constants::samples_per_pixel);
+                                        write_color<int>(pixel3, _stochastic_sample(m+1,n+1), tracer_constants::samples_per_pixel);
+                                        write_color<int>(pixel4, _stochastic_sample(m+2,n+1), tracer_constants::samples_per_pixel);
+                                        write_color<int>(pixel5, _stochastic_sample(m+1,n+2), tracer_constants::samples_per_pixel);
                                     }
                                     else // interpolate smallest square
                                     {
@@ -286,8 +297,6 @@ private:
             }
         };
 
-        std::mutex mutex;
-
         const auto run_stripe = [&](int j0, int j1)
         {
             for (int j = j0; j < j1; j+=big_square_size) {
@@ -296,12 +305,8 @@ private:
                     // process a "big square"
                     process_square(i,j);
 
-                    {
-                        std::lock_guard<std::mutex> lock(mutex);
-
-                        // manage dynamic progress gui
-                        dgui.show(work_image.data());
-                    }
+                    // manage dynamic progress gui
+                    dgui.show(work_image.data());
                 }
                 progress++;
             }
@@ -333,17 +338,22 @@ private:
     {
         std::atomic<int> progress = 0;
 
+        dynamic_gui dgui(image_width, image_height, 2, "Parallel Stripes");
+
         thread_pool tp{4};
-        
+
         auto run_stripe = [&](int j0, int j1) {
             for (int j = j0; j < j1; ++j) {
                 int offset = color_channels*j*image_width;
                 for (int i = 0; i < image_width; ++i) {
-                    write_color(output_image+offset, _stochastic_sample(i,j), samples_per_pixel);
+                    write_color(output_image+offset, _stochastic_sample(i,j), tracer_constants::samples_per_pixel);
                     offset += color_channels;
                 }
                 progress++;
-            }
+
+                // manage dynamic progress gui
+                dgui.show(output_image);
+            }         
         };
         
         using namespace std::chrono_literals;
@@ -373,10 +383,16 @@ private:
 
         thread_pool tp{4};
 
-        std::array<float,image_width*image_height*color_channels> work_image1{0};
-        std::array<float,image_width*image_height*color_channels> work_image2{0};
-        std::array<float,image_width*image_height*color_channels> work_image3{0};
-        std::array<float,image_width*image_height*color_channels> work_image4{0};
+        if constexpr (tracer_constants::progress_gui)
+        {
+            std::cout << "progress gui not available for now for parallel images mode :-(" << std::endl;
+        }
+
+        frame_allocator<float,tracer_constants::frame_size,4> frame_alloc;
+        auto& work_image1 = frame_alloc.get_frame(0,0.f);
+        auto& work_image2 = frame_alloc.get_frame(1,0.f);
+        auto& work_image3 = frame_alloc.get_frame(2,0.f);
+        auto& work_image4 = frame_alloc.get_frame(3,0.f);
 
         auto run_image = [&](float* partial_image,int small_samples_per_pixel) {
             for (int j = 0; j < image_height; ++j) {
@@ -394,10 +410,10 @@ private:
         using namespace std::chrono_literals;
         const auto start = std::chrono::steady_clock::now();
 
-        tp.add_job( [&](){ run_image(work_image1.data(), samples_per_pixel/4); } );
-        tp.add_job( [&](){ run_image(work_image2.data(), samples_per_pixel/4); } );
-        tp.add_job( [&](){ run_image(work_image3.data(), samples_per_pixel/4); } );
-        tp.add_job( [&](){ run_image(work_image4.data(), samples_per_pixel/4); } );
+        tp.add_job( [&](){ run_image(work_image1.data(), tracer_constants::samples_per_pixel/4); } );
+        tp.add_job( [&](){ run_image(work_image2.data(), tracer_constants::samples_per_pixel/4); } );
+        tp.add_job( [&](){ run_image(work_image3.data(), tracer_constants::samples_per_pixel/4); } );
+        tp.add_job( [&](){ run_image(work_image4.data(), tracer_constants::samples_per_pixel/4); } );
         while(true) {
             const auto percent = 100*progress/(4*image_height);
             std::cout << "Computing done @" << percent << "%\r" << std::flush;
@@ -420,7 +436,7 @@ private:
                 color pixel_color4(wk4[0], wk4[1], wk4[2]);
                 color pixel_acc = pixel_color1+pixel_color2+pixel_color3+pixel_color4;
                 auto* out = output_image+offset;
-                write_color(out, pixel_acc, samples_per_pixel);
+                write_color(out, pixel_acc, tracer_constants::samples_per_pixel);
                 offset += color_channels;
             }
         }
@@ -468,10 +484,6 @@ private:
     hittable_list world;
     hittable_list lights;
     color background{0,0,0};
-
-public:
-    static constexpr int samples_per_pixel = 1000;
-    static constexpr int max_depth = 50;
 };
 
 #endif

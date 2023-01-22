@@ -1,7 +1,7 @@
 #ifndef PERLIN_H
 #define PERLIN_H
 
-#include "rtweekend.h"
+#include "tracer_utils.h"
 
 #include <array>
 

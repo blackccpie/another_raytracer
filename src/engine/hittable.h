@@ -2,7 +2,7 @@
 #define HITTABLE_H
 
 #include "aabb.h"
-#include "rtweekend.h"
+#include "tracer_utils.h"
 
 class material;
 

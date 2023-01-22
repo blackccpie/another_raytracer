@@ -3,7 +3,7 @@
 
 #include "imageio.h"
 #include "perlin.h"
-#include "rtweekend.h"
+#include "tracer_utils.h"
 //#include "gui.h"
 
 #include <string>

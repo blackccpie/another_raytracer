@@ -1,7 +1,7 @@
 #ifndef BOX_H
 #define BOX_H
 
-#include "rtweekend.h"
+#include "tracer_utils.h"
 
 #include "aarect.h"
 #include "hittable_list.h"

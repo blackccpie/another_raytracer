@@ -5,7 +5,7 @@
 #include "onb.h"
 #include "pdf.h"
 #include "texture.h"
-#include "rtweekend.h"
+#include "tracer_utils.h"
 
 struct hit_record;
 

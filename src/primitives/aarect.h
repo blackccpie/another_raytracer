@@ -1,7 +1,7 @@
 #ifndef AARECT_H
 #define AARECT_H
 
-#include "rtweekend.h"
+#include "tracer_utils.h"
 
 #include "hittable.h"
 

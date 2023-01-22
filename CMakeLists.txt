@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.24)
-project (raycaster)
+project (another_raytracer)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -45,11 +45,11 @@ set (headers_list
     src/rendering/texture.h
     src/utils/gui.h
     src/utils/imageio.h
-    src/utils/rtweekend.h
     src/utils/threadpool.h
+    src/utils/tracer_utils.h
 )
 
-add_executable(raycaster ${sources_list} ${headers_list})
+add_executable(another_raytracer ${sources_list} ${headers_list})
 
 if(NOT WIN32)
     # The argument size is a hexadecimal number with
@@ -57,17 +57,17 @@ if(NOT WIN32)
     # last three hexadecimal digits should be zero
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-stack_size -Wl,0x1000000") # 16Mo stack limit
 
-    target_compile_options(raycaster PRIVATE "-Wall" "-Wconversion")
+    target_compile_options(another_raytracer PRIVATE "-Wall" "-Wconversion")
 
 endif()
 
-target_include_directories(raycaster SYSTEM PRIVATE
+target_include_directories(another_raytracer SYSTEM PRIVATE
     3rd_parties/CImg
     3rd_parties/rapidobj
     3rd_parties/stb
 )
 
-target_include_directories(raycaster PRIVATE
+target_include_directories(another_raytracer PRIVATE
     src/core
     src/engine
     src/primitives
@@ -76,15 +76,15 @@ target_include_directories(raycaster PRIVATE
 )
 
 if(NOT WIN32)
-    target_include_directories(raycaster SYSTEM PRIVATE
+    target_include_directories(another_raytracer SYSTEM PRIVATE
         /opt/X11/include
     )
 
-    target_link_directories(raycaster PRIVATE
+    target_link_directories(another_raytracer PRIVATE
         /opt/X11/lib
     )
 
-    target_link_libraries(raycaster PRIVATE
+    target_link_libraries(another_raytracer PRIVATE
         X11
         pthread
     )

@@ -1,5 +1,5 @@
-#ifndef RTWEEKEND_H
-#define RTWEEKEND_H
+#ifndef TRACER_UTILS_H
+#define TRACER_UTILS_H
 
 #include <cmath>
 #include <limits>
