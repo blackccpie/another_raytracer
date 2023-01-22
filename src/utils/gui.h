@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <thread>
 
 namespace cimg_library{ class CImgDisplay; }
