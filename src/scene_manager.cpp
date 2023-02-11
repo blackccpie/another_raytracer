@@ -10,8 +10,15 @@
 #include "ressources.h"
 #include "sphere.h"
 
+inline std::shared_ptr<hittable> default_origin_lighting()
+{
+    return std::make_shared<xz_rect>(0, 1, 0, 1, 0, std::shared_ptr<material>());
+}
+
 hittable_list scene_manager::_random_scene()
 {
+    world.lights.add(default_origin_lighting());
+
     hittable_list objects;
 
     auto ground_checked_material = std::make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
@@ -65,6 +72,8 @@ hittable_list scene_manager::_random_scene()
 
 hittable_list scene_manager::_two_spheres()
 {
+    world.lights.add(default_origin_lighting());
+
     hittable_list objects;
 
     auto checker = std::make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
@@ -77,6 +86,8 @@ hittable_list scene_manager::_two_spheres()
 
 hittable_list scene_manager::_two_perlin_spheres()
 {
+    world.lights.add(default_origin_lighting());
+
     hittable_list objects;
 
     auto pertext = std::make_shared<noise_texture>(4);
@@ -88,6 +99,8 @@ hittable_list scene_manager::_two_perlin_spheres()
 
 hittable_list scene_manager::_earth()
 {
+    world.lights.add(default_origin_lighting());
+
     auto earth_texture = std::make_shared<image_texture>(ressources::earthmap_texture);
     auto earth_surface = std::make_shared<lambertian>(earth_texture);
     auto globe = std::make_shared<sphere>(point3(0,0,0), 2, earth_surface);
@@ -105,6 +118,9 @@ hittable_list scene_manager::_simple_light()
 
     auto difflight = std::make_shared<diffuse_light>(color(4,4,4));
     objects.add(std::make_shared<xy_rect>(3, 5, 1, 3, -2, difflight));
+
+    // TODO-AM : clarify this whole double lighting object thing!!!!!
+    world.lights.add(std::make_shared<flip_face>(std::make_shared<xy_rect>(3, 5, 1, 3, -2, std::shared_ptr<material>())));
 
     return objects;
 }
@@ -155,9 +171,12 @@ hittable_list scene_manager::_cornell_smoke()
     auto green = std::make_shared<lambertian>(color(.12, .45, .15));
     auto light = std::make_shared<diffuse_light>(color(7, 7, 7));
 
+    // TODO-AM : clarify this whole double lighting object thing!!!!!
+    world.lights.add(std::make_shared<xz_rect>(113, 443, 127, 432, 554, std::shared_ptr<material>()));
+
     objects.add(std::make_shared<yz_rect>(0, 555, 0, 555, 555, green));
     objects.add(std::make_shared<yz_rect>(0, 555, 0, 555, 0, red));
-    objects.add(std::make_shared<xz_rect>(113, 443, 127, 432, 554, light));
+    objects.add(std::make_shared<flip_face>(std::make_shared<xz_rect>(113, 443, 127, 432, 554, light)));
     objects.add(std::make_shared<xz_rect>(0, 555, 0, 555, 555, white));
     objects.add(std::make_shared<xz_rect>(0, 555, 0, 555, 0, white));
     objects.add(std::make_shared<xy_rect>(0, 555, 0, 555, 555, white));
@@ -203,6 +222,9 @@ hittable_list scene_manager::_final_scene()
     auto light = std::make_shared<diffuse_light>(color(7, 7, 7));
     objects.add(std::make_shared<xz_rect>(123, 423, 147, 412, 554, light));
 
+    // TODO-AM : clarify this whole double lighting object thing!!!!!
+    world.lights.add(std::make_shared<xz_rect>(123, 423, 147, 412, 554, std::shared_ptr<material>()));
+
     auto center1 = point3(400, 400, 200);
     auto center2 = center1 + vec3(30,0,0);
     auto moving_sphere_material = std::make_shared<lambertian>(color(0.7, 0.3, 0.1));
@@ -245,21 +267,24 @@ hittable_list scene_manager::_mesh_scene()
 {
     mesh m;
     if( m.parse(ressources::capsule_obj_path) ) {
-        hittable_list world;
+        hittable_list objects;
         
         // mesh triangles
         auto triangles = m.build();
-        world.add(std::make_shared<bvh_node>(triangles, 0.0, 1.0));
+        objects.add(std::make_shared<bvh_node>(triangles, 0.0, 1.0));
         
         // lighting
-        auto light = std::make_shared<diffuse_light>(color(7, 7, 7));
-        world.add(std::make_shared<xz_rect>(123, 423, 147, 412, 554, light));
-        //world.add(std::make_shared<sphere>(point3(0, 800, 500), 100, light));
+        auto light = std::make_shared<diffuse_light>(color(15, 15, 15));
+        objects.add(std::make_shared<xz_rect>(123, 423, 147, 412, 554, light));
+        //objects.add(std::make_shared<sphere>(point3(0, 800, 500), 100, light));
         
+        // TODO-AM : clarify this whole double lighting object thing!!!!!
+        world.lights.add(std::make_shared<xz_rect>(123, 423, 147, 412, 554, std::shared_ptr<material>()));
+
         // thin mist
         auto boundary = std::make_shared<sphere>(point3(0, 0, 0), 5000, std::make_shared<dielectric>(1.5));
-        world.add(std::make_shared<constant_medium>(boundary, .0001, color(1,1,1)));
-        return world;
+        objects.add(std::make_shared<constant_medium>(boundary, .0001, color(1,1,1)));
+        return objects;
     }
     else
         throw std::logic_error("cannot parse input obj file!");
